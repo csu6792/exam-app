@@ -676,42 +676,54 @@
     }
 
     async function renderBookPage(pageNumber) {
-        if (!currentPdfDoc || isRenderingPage) return;
-        isRenderingPage = true;
+    if (!currentPdfDoc || isRenderingPage) return;
+    isRenderingPage = true;
 
-        try {
-            const page = await currentPdfDoc.getPage(pageNumber);
-            const canvas = document.getElementById('pdf-canvas');
-            const ctx = canvas.getContext('2d');
-            const viewportArea = document.getElementById('viewport-area');
+    try {
+        const page = await currentPdfDoc.getPage(pageNumber);
+        const canvas = document.getElementById('pdf-canvas');
+        const ctx = canvas.getContext('2d');
+        const viewportArea = document.getElementById('viewport-area');
 
-            // 依據容器寬度實施動態 RWD 高清縮放
-            const containerWidth = viewportArea.clientWidth - 24; 
-            const unscaledViewport = page.getViewport({ scale: 1 });
-            const dynamicScale = containerWidth / unscaledViewport.width;
-            
-            const compiledViewport = page.getViewport({ scale: dynamicScale });
-            canvas.height = compiledViewport.height;
-            canvas.width = compiledViewport.width;
+        // 1. 計算 RWD 的基礎縮放比例
+        const containerWidth = viewportArea.clientWidth - 24; 
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        const dynamicScale = containerWidth / unscaledViewport.width;
+        const compiledViewport = page.getViewport({ scale: dynamicScale });
 
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: compiledViewport
-            };
-            await page.render(renderContext).promise;
+        // 2. 核心高清優化：獲取螢幕的像素密度（通常手機為 2 或 3）
+        const outputScale = window.devicePixelRatio || 1;
 
-            document.getElementById('reader-page-indicator').innerText = `${pageNumber} / ${currentPdfDoc.numPages}`;
-            document.getElementById('reader-slider').value = pageNumber;
+        // 3. 讓 Canvas 的內在畫布解析度放大（乘以 outputScale）
+        canvas.width = Math.floor(compiledViewport.width * outputScale);
+        canvas.height = Math.floor(compiledViewport.height * outputScale);
 
-            // 儲存進度
-            localStorage.setItem('ebook_progress_' + currentPdfUrl, pageNumber);
+        // 4. 透過 CSS 讓 Canvas 顯示大小保持原樣
+        canvas.style.width = Math.floor(compiledViewport.width) + "px";
+        canvas.style.height = Math.floor(compiledViewport.height) + "px";
 
-        } catch (err) {
-            console.error(err);
-        } finally {
-            isRenderingPage = false;
-        }
+        // 5. 告訴 PDF.js 繪製時需要放大對應的倍數
+        const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: compiledViewport,
+            transform: transform // 帶入高清轉換矩陣
+        };
+        await page.render(renderContext).promise;
+
+        document.getElementById('reader-page-indicator').innerText = `${pageNumber} / ${currentPdfDoc.numPages}`;
+        document.getElementById('reader-slider').value = pageNumber;
+
+        // 儲存進度
+        localStorage.setItem('ebook_progress_' + currentPdfUrl, pageNumber);
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        isRenderingPage = false;
     }
+}
 
     function movePage(direction) {
         if (!currentPdfDoc) return;
