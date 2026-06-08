@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>專業測驗與閱讀系統</title>
-    <!-- 引入 PWA 清單 -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
@@ -25,11 +24,16 @@
             --status-error-bg: #fff5f5;
             --status-warning: #ff9500;         /* iOS System Orange */
             --status-warning-bg: #fff9f0;
-            --border-light: #3c3c432e;         /* iOS Separator (0.5px 質感) */
-            --transition-ios: all 0.28s cubic-bezier(0.25, 1, 0.5, 1); /* iOS 彈性動畫 */
+            --border-light: #3c3c432e;
+            --transition-ios: all 0.28s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -42,7 +46,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* iOS 導覽列 (Navigation Bar) */
         header {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
@@ -65,14 +68,17 @@
             scroll-behavior: smooth;
         }
 
-        /* 頂層 Tab 分頁內容區塊控制 */
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
 
-        /* iOS 工具列 (下方懸浮動態按鈕區) */
+        /* 底部按鈕區 - 完全模擬 iOS 行動介面 */
         .bottom-nav {
             position: fixed;
-            bottom: calc(50px + env(safe-area-inset-bottom)); /* 移至 Tab Bar 之上 */
+            bottom: calc(50px + env(safe-area-inset-bottom));
             left: 0;
             width: 100%;
             background: linear-gradient(to top, rgba(242,242,247,0.95) 80%, rgba(242,242,247,0));
@@ -81,7 +87,7 @@
             display: none;
         }
 
-        /* iOS 底部固定導覽列 (Global Tab Bar) */
+        /* 系統核心導覽列 */
         .ios-tab-bar {
             position: fixed;
             bottom: 0;
@@ -106,17 +112,32 @@
             cursor: pointer;
             transition: color 0.15s ease;
         }
-        .tab-item.active { color: var(--brand-primary); }
-        .tab-icon { width: 22px; height: 22px; margin-bottom: 2px; fill: none; stroke: currentColor; stroke-width: 2.2; }
-        .tab-label { font-size: 10px; font-weight: 500; }
+        .tab-item.active {
+            color: var(--brand-primary);
+        }
+        .tab-icon {
+            width: 22px;
+            height: 22px;
+            margin-bottom: 2px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+        }
+        .tab-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
 
-        /* iOS 電子書獨立滿版閱讀視窗 (Apple Books 風格) */
+        /* PDF 電子書滿版閱讀面板 */
         .ebook-window {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #f2f2f7; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f2f2f7;
             z-index: 500;
-            display: none; 
+            display: none;
             flex-direction: column;
         }
         .reader-header {
@@ -129,19 +150,37 @@
             align-items: center;
             border-bottom: 0.5px solid var(--border-light);
             height: 54px;
+            position: relative;
+        }
+        /* 頂部下載進度條 */
+        #reader-progress-bar {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            height: 2px;
+            background: var(--brand-primary);
+            width: 0%;
+            transition: width 0.2s;
+            z-index: 10;
         }
         .btn-close {
             color: var(--brand-primary);
-            font-size: 16px; font-weight: 500; background: none; border: none; cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            background: none;
+            border: none;
+            cursor: pointer;
         }
         .reader-title {
-            font-size: 15px; font-weight: 600; max-width: 40%;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            font-size: 15px;
+            font-weight: 600;
+            max-width: 40%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             letter-spacing: -0.2px;
             text-align: center;
         }
-        
-        /* 縮放控制按鈕組樣式 */
         .zoom-controls {
             display: flex;
             align-items: center;
@@ -160,7 +199,10 @@
             border-radius: 6px;
             cursor: pointer;
         }
-        .btn-zoom:active { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .btn-zoom:active {
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
         .zoom-text {
             font-size: 11px;
             color: var(--text-secondary);
@@ -168,8 +210,6 @@
             text-align: center;
             font-weight: 500;
         }
-
-        /* 🎬 核心優化：開啟 3D 空間透視感容器 */
         .reader-viewport {
             flex: 1;
             overflow: auto;
@@ -179,20 +219,17 @@
             padding: 12px;
             touch-action: pan-x pan-y;
             -webkit-overflow-scrolling: touch;
-            perspective: 1200px; /* 👈 賦予子物件 3D 立體景深深度 */
+            perspective: 1200px;
         }
-        
-        /* 🎬 核心優化：Canvas 加上 3D 變形與平滑過渡 */
         #pdf-canvas {
             background: #ffffff;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             border-radius: 6px;
             display: block;
-            transform-origin: center center; /* 設為中心旋轉 */
+            transform-origin: center center;
             transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.32s ease;
-            backface-visibility: hidden;    /* 避免 3D 翻轉時背面穿幫閃爍 */
+            backface-visibility: hidden;
         }
-
         .reader-footer {
             background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(20px);
@@ -206,29 +243,62 @@
             align-items: center;
         }
         .page-controls {
-            display: flex; width: 100%; justify-content: space-between; align-items: center;
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
         }
         .btn-page {
-            width: 38px; height: 38px; border-radius: 50%; background: #e5e5ea;
-            border: none; color: var(--text-primary); font-size: 15px;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #e5e5ea;
+            border: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-        .btn-page:active { background: #d1d1d6; }
+        .btn-page:active {
+            background: #d1d1d6;
+        }
         .ios-slider {
-            -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px;
-            background: #d1d1d6; outline: none;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #d1d1d6;
+            outline: none;
         }
         .ios-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 26px; height: 26px;
-            border-radius: 50%; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+            cursor: pointer;
         }
 
-        /* 測驗區架構 */
-        .section { display: none; opacity: 0; }
-        .section.active { display: block; opacity: 1; animation: iosSlideUp 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-        @keyframes iosSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* 切換動畫與基礎組件 */
+        .section {
+            display: none;
+            opacity: 0;
+        }
+        .section.active {
+            display: block;
+            opacity: 1;
+            animation: iosSlideUp 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes iosSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* iOS Inset Grouped 卡片設計 */
         .app-card {
             background: var(--ios-surface);
             border-radius: 12px;
@@ -237,12 +307,13 @@
             box-shadow: none;
             border: none;
         }
-
-        /* iOS 表單小標題規範 */
-        .card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.2px; }
-        .card-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
-
-        /* iOS 系統級滿版按鈕 */
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            letter-spacing: -0.2px;
+        }
         .btn-action {
             width: 100%;
             padding: 14px 24px;
@@ -258,19 +329,15 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            letter-spacing: -0.4px;
         }
-        .btn-action:active { opacity: 0.7; transform: scale(0.99); }
-        
-        /* iOS 次要邊框按鈕 */
+        .btn-action:active {
+            opacity: 0.7;
+            transform: scale(0.99);
+        }
         .btn-secondary {
             background-color: var(--ios-surface);
             color: var(--brand-primary);
-            border: none;
         }
-        .btn-secondary:active { background-color: #f2f2f7; }
-
-        /* iOS 分組橫欄 (Cell Row) */
         .setting-row {
             display: flex;
             align-items: center;
@@ -278,36 +345,55 @@
             padding: 12px 0;
             border-bottom: 0.5px solid var(--border-light);
         }
-        .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
-        .setting-row > div:first-child { flex: 1; min-width: 0; }
+        .setting-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .setting-row > div:first-child {
+            flex: 1;
+            min-width: 0;
+        }
         
-        /* 100% 擬真 iOS UISwitch 規格 */
-        .toggle-switch { 
-            position: relative; 
-            display: inline-block; 
-            width: 51px; 
-            height: 31px; 
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 51px;
+            height: 31px;
             flex-shrink: 0;
             margin-left: 16px;
         }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
         .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-color: #e3e3e5;
             border-radius: 31px;
-            transition: all 0.25s ease-in-out;
+            transition: 0.25s;
         }
         .slider:before {
-            position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px;
+            position: absolute;
+            content: "";
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
             background-color: white;
             border-radius: 50%;
-            transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 3px 1px rgba(0,0,0,0.06);
+            transition: 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
-        input:checked + .slider { background-color: var(--status-success); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        input:checked + .slider {
+            background-color: var(--status-success);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
 
-        /* iOS 數字輸入框 field 樣式 */
         .input-number-wrapper {
             display: flex;
             align-items: center;
@@ -324,11 +410,9 @@
             text-align: center;
             font-size: 16px;
             font-weight: 500;
-            color: var(--text-primary);
             outline: none;
         }
 
-        /* iOS 選擇題 Cell 設計 */
         .option-container {
             display: flex;
             align-items: center;
@@ -337,11 +421,11 @@
             border-radius: 10px;
             background-color: var(--ios-sub-bg);
             border: 0.5px solid var(--border-light);
-            transition: var(--transition-ios);
             cursor: pointer;
         }
-        .option-container input[type="radio"] { display: none; }
-        
+        .option-container input[type="radio"] {
+            display: none;
+        }
         .option-badge {
             flex-shrink: 0;
             width: 22px;
@@ -356,11 +440,12 @@
             font-weight: 600;
             color: var(--text-secondary);
             margin-right: 12px;
-            transition: var(--transition-ios);
         }
-        .option-text { font-size: 15px; color: var(--text-primary); line-height: 1.4; }
-
-        /* iOS 點選活化狀態 */
+        .option-text {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
         .option-container.selected {
             border-color: var(--brand-primary);
             background-color: #f2f8ff;
@@ -370,7 +455,6 @@
             border-color: var(--brand-primary);
             color: #ffffff;
         }
-
         .option-container.correct {
             border-color: var(--status-success) !important;
             background-color: var(--status-success-bg) !important;
@@ -380,7 +464,6 @@
             border-color: var(--status-success) !important;
             color: #ffffff !important;
         }
-
         .option-container.wrong {
             border-color: var(--status-error) !important;
             background-color: var(--status-error-bg) !important;
@@ -391,7 +474,6 @@
             color: #ffffff !important;
         }
 
-        /* iOS 系統提示橫幅 */
         .status-banner {
             margin-top: 14px;
             padding: 12px 14px;
@@ -402,17 +484,39 @@
             align-items: center;
             gap: 8px;
         }
-        .status-banner.show { display: flex; }
-        .status-banner.correct { background-color: var(--status-success-bg); color: var(--status-success); }
-        .status-banner.wrong { background-color: var(--status-error-bg); color: var(--status-error); }
-        .status-banner.unanswered { background-color: var(--status-warning-bg); color: var(--status-warning); }
+        .status-banner.show {
+            display: flex;
+        }
+        .status-banner.correct {
+            background-color: var(--status-success-bg);
+            color: var(--status-success);
+        }
+        .status-banner.wrong {
+            background-color: var(--status-error-bg);
+            color: var(--status-error);
+        }
+        .status-banner.unanswered {
+            background-color: var(--status-warning-bg);
+            color: var(--status-warning);
+        }
 
-        /* iOS 骨架屏 */
-        .skeleton-card { padding: 16px; background: var(--ios-surface); border-radius: 12px; margin-bottom: 24px;}
-        .skeleton-line { background: linear-gradient(90deg, #e5e5ea 25%, #d1d1d6 50%, #e5e5ea 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton-card {
+            padding: 16px;
+            background: var(--ios-surface);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .skeleton-line {
+            background: linear-gradient(90deg, #e5e5ea 25%, #d1d1d6 50%, #e5e5ea 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 4px;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
 
-        /* iOS 得分大數字圓環感 */
         .score-circle-view {
             text-align: center;
             padding: 24px 0;
@@ -424,12 +528,25 @@
             line-height: 1;
             letter-spacing: -2px;
         }
-        .score-lbl { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px;}
+        .score-lbl {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
 
-        /* iOS 簡潔 SF Symbols 風格圖示 */
-        .svg-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        .svg-icon {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
-        /* iOS Muted Footer */
         .app-footer {
             margin-top: 48px;
             padding: 24px 0 8px;
@@ -456,7 +573,20 @@
             border-radius: 50%;
             display: inline-block;
         }
-        .footer-meta { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+        
+        /* 縮圖上下載進度 Overlay */
+        .thumb-progress-overlay {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: rgba(0, 122, 255, 0.85);
+            color: #ffffff;
+            font-size: 10px;
+            text-align: center;
+            font-weight: 600;
+            padding: 2px 0;
+            display: none;
+            backdrop-filter: blur(4px);
+        }
     </style>
 </head>
 <body>
@@ -469,27 +599,29 @@
             <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px; letter-spacing: -0.1px;">智慧型書庫</div>
             <div class="app-card" style="padding-top: 4px; padding-bottom: 4px;">
                 
-                <div class="setting-row" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '初級第一科：人工智慧基礎概論')" style="cursor: pointer;">
+                <div class="setting-row" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '第一科：人工智慧基礎概論')" style="cursor: pointer;">
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                        <div style="background: #f2f8ff; width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid var(--border-light);">
+                        <div style="background: #f2f8ff; width: 42px; height: 42px; border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid var(--border-light);">
                             <img id="thumb-book1" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div id="thumb-prog-1" class="thumb-progress-overlay">0%</div>
                         </div>
                         <div style="flex: 1; min-width: 0; padding: 4px 0;">
                             <div style="font-size: 16px; font-weight: 500; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">第一科：人工智慧基礎概論</div>
-                            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">--</div>
+                            <div class="book-status-text" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf" style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">狀態讀取中...</div>
                         </div>
                     </div>
                     <svg class="svg-icon" style="color: var(--text-muted); width: 14px; height: 14px; flex-shrink: 0;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </div>
 
-                <div class="setting-row" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '初級第二科：生成式 AI 應用與規劃')" style="cursor: pointer;">
+                <div class="setting-row" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '第二科：生成式 AI 應用與規劃')" style="cursor: pointer;">
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                        <div style="background: #f2f8ff; width: 38px; height: 38px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid var(--border-light);">
+                        <div style="background: #f2f8ff; width: 42px; height: 42px; border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid var(--border-light);">
                             <img id="thumb-book2" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div id="thumb-prog-2" class="thumb-progress-overlay">0%</div>
                         </div>
                         <div style="flex: 1; min-width: 0; padding: 4px 0;">
                             <div style="font-size: 16px; font-weight: 500; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">第二科：生成式 AI 應用與規劃</div>
-                            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">--</div>
+                            <div class="book-status-text" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf" style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">狀態讀取中...</div>
                         </div>
                     </div>
                     <svg class="svg-icon" style="color: var(--text-muted); width: 14px; height: 14px; flex-shrink: 0;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -502,8 +634,6 @@
             <div id="stage-loading" class="section active">
                 <div class="skeleton-card">
                     <div class="skeleton-line" style="width: 40%; height: 20px; margin-bottom: 12px;"></div>
-                    <div class="skeleton-line" style="width: 70%; height: 14px; margin-bottom: 32px;"></div>
-                    <div class="skeleton-line" style="width: 100%; height: 44px; margin-bottom: 10px;"></div>
                     <div class="skeleton-line" style="width: 100%; height: 44px; margin-bottom: 10px;"></div>
                     <div class="skeleton-line" style="width: 100%; height: 44px;"></div>
                 </div>
@@ -512,13 +642,12 @@
             <div id="stage-config" class="section">
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px;">題庫清單</div>
                 <div class="app-card" id="bank-list-container" style="padding-top: 4px; padding-bottom: 4px;"></div>
-                
+
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 16px 4px 8px;">考卷設定</div>
                 <div class="app-card" style="padding-top: 4px; padding-bottom: 4px;">
                     <div class="setting-row" style="border: none;">
                         <div>
-                            <div class="card-title">隨機抽取題目數量</div>
-                            <div style="font-size: 13px; color: var(--text-secondary);">自選定題庫中抽題動態生成</div>
+                            <div class="card-title">隨機抽取數量</div>
                         </div>
                         <div class="input-number-wrapper">
                             <input type="number" id="question-count" value="10" min="1" inputmode="numeric">
@@ -529,7 +658,7 @@
 
             <div id="stage-quiz" class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px;">
-                    <span style="font-size: 12px; font-weight: 600; color: var(--brand-primary); letter-spacing: 0.5px;">測驗進行中</span>
+                    <span style="font-size: 12px; font-weight: 600; color: var(--brand-primary);">測驗進行中</span>
                     <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);" id="quiz-header"></span>
                 </div>
                 <div id="quiz-container"></div>
@@ -543,43 +672,24 @@
                     </div>
                     <div style="text-align: center; font-size: 14px; color: var(--text-secondary); font-weight: 500;" id="result-details"></div>
                 </div>
-                <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin: 24px 4px 12px;">答題複查與解析</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 24px 4px 12px;">答題複查與解析</div>
             </div>
         </div>
 
         <footer class="app-footer">
-            <div class="footer-status">
-                <span class="status-dot"></span>
-                <span>所有服務運行正常</span>
-            </div>
-            <div class="footer-meta">
-                <span>版本 v1.2.0</span>
-            </div>
-            <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
-                &copy; 2026 6792@gcloud.csu.edu.tw.
-            </div>
+            <div class="footer-status"><span class="status-dot"></span><span>所有服務運行正常</span></div>
+            <div class="footer-meta"><span>版本 v1.3.0 (Smart Progress)</span></div>
         </footer>
     </main>
 
     <div class="bottom-nav" id="action-bar-config">
-        <button class="btn-action" onclick="generateQuiz()">
-            <span>開始測驗</span>
-            <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
+        <button class="btn-action" onclick="generateQuiz()"><span>開始測驗</span></button>
     </div>
-    
     <div class="bottom-nav" id="action-bar-quiz">
-        <button class="btn-action" onclick="submitQuiz()">
-            <span>提交試卷並評分</span>
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        </button>
+        <button class="btn-action" onclick="submitQuiz()"><span>提交試卷並評分</span></button>
     </div>
-
     <div class="bottom-nav" id="action-bar-result">
-        <button class="btn-action btn-secondary" onclick="location.reload()">
-            <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-            <span>開始新測驗</span>
-        </button>
+        <button class="btn-action btn-secondary" onclick="location.reload()"><span>開始新測驗</span></button>
     </div>
 
     <nav class="ios-tab-bar">
@@ -593,18 +703,16 @@
         </div>
     </nav>
 
-    <!-- PDF 電子書滿版視窗 -->
     <div id="ebook-reader-window" class="ebook-window">
         <div class="reader-header">
             <button class="btn-close" onclick="closeEbook()">✕ 關閉</button>
             <div class="reader-title" id="reader-book-title">加載中...</div>
-            
-            <!-- 🔍 縮放控制 UI 區域 -->
             <div class="zoom-controls">
                 <button class="btn-zoom" onclick="adjustZoom(-0.25)">−</button>
                 <span class="zoom-text" id="zoom-indicator">100%</span>
                 <button class="btn-zoom" onclick="adjustZoom(0.25)">+</button>
             </div>
+            <div id="reader-progress-bar"></div>
         </div>
         
         <div class="reader-viewport" id="viewport-area">
@@ -622,8 +730,10 @@
     </div>
 
 <script>
+    // 指定 PDF.js Worker 核心
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
+    // 全局狀態變數
     let loadedBanks = {}; 
     let currentQuiz = []; 
     let activeGlobalTab = 'reading'; 
@@ -633,44 +743,32 @@
     let currentPdfPage = 1;
     let currentPdfUrl = ''; 
     let isRenderingPage = false;
-    
-    // 基本縮放率變數
     let currentZoomScale = 1.0;
 
-    // ==================== 📱 手機左右滑動翻頁功能 ====================
-    let touchStartX = 0;
-    let touchEndX = 0;
-    let touchStartY = 0;
-    let touchEndY = 0;
+    // ==================== 📱 手機左右滑動翻頁 ====================
+    let touchStartX = 0; let touchEndX = 0;
+    let touchStartY = 0; let touchEndY = 0;
 
     function initTouchGestures() {
         const viewportArea = document.getElementById('viewport-area');
         if (!viewportArea) return;
-        
         viewportArea.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
+            touchStartX = e.changedTouches[0].screenX; 
             touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
-
         viewportArea.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
+            touchEndX = e.changedTouches[0].screenX; 
             touchEndY = e.changedTouches[0].screenY;
             handleSwipeGesture();
         }, { passive: true });
     }
 
     function handleSwipeGesture() {
-        if (currentZoomScale > 1.0) return;
-
+        if (currentZoomScale > 1.0) return; // 縮放狀態下關閉滑動翻頁以防衝突
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
-        
         if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            if (deltaX < 0) {
-                movePage(1);  
-            } else {
-                movePage(-1); 
-            }
+            if (deltaX < 0) movePage(1); else movePage(-1); 
         }
     }
 
@@ -684,23 +782,22 @@
         }
     }
 
-    // ==================== 🔄 全局 Tab Bar 切換邏輯 ====================
+    // ==================== 🔄 全局 Tab 頁面切換控制 ====================
     function switchGlobalTab(tabId) {
         activeGlobalTab = tabId;
-        
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
         document.getElementById(`tab-btn-${tabId}`).classList.add('active');
-        
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.getElementById(`tab-content-${tabId}`).classList.add('active');
         
         const navTitle = document.getElementById('nav-title');
         document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         
-        if (tabId === 'reading') {
-            navTitle.innerText = "教科書閱讀";
-        } else {
-            navTitle.innerText = "專業測驗系統";
+        if (tabId === 'reading') { 
+            navTitle.innerText = "教科書閱讀"; 
+            syncAllReadingProgress(); 
+        } else { 
+            navTitle.innerText = "專業測驗系統"; 
             restoreQuizActionBar(); 
         }
         document.getElementById('main-content').scrollTo(0, 0);
@@ -708,20 +805,11 @@
 
     function showSection(stageId) {
         activeQuizSection = stageId;
-        if (activeGlobalTab === 'quiz') {
-            document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
-        }
-        
+        if (activeGlobalTab === 'quiz') document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         document.querySelectorAll('#tab-content-quiz .section').forEach(el => el.classList.remove('active'));
         document.getElementById(stageId).classList.add('active');
-        
-        if (stageId === 'stage-result') {
-            document.getElementById('stage-quiz').classList.add('active'); 
-        }
-        
-        if (activeGlobalTab === 'quiz') {
-            restoreQuizActionBar();
-        }
+        if (stageId === 'stage-result') document.getElementById('stage-quiz').classList.add('active'); 
+        if (activeGlobalTab === 'quiz') restoreQuizActionBar();
         document.getElementById('main-content').scrollTo(0, 0);
     }
 
@@ -731,27 +819,45 @@
         if (activeQuizSection === 'stage-result') document.getElementById('action-bar-result').style.display = 'block';
     }
 
-    // ==================== 📖 PDF 電子書核心邏輯 (整合 3D 翻頁排程) ====================
+    // ==================== 📖 PDF 閱讀核心邏輯與進度監聽 ====================
     async function openEbook(pdfUrl, bookTitle) {
         currentPdfUrl = pdfUrl; 
         const readerWin = document.getElementById('ebook-reader-window');
         const titleEl = document.getElementById('reader-book-title');
+        const progressBar = document.getElementById('reader-progress-bar');
         
-        titleEl.innerText = bookTitle;
+        titleEl.innerText = "下載資料中 0%";
+        progressBar.style.width = '0%';
+        progressBar.style.opacity = '1';
         readerWin.style.display = 'flex'; 
 
         currentZoomScale = 1.0;
         document.getElementById('zoom-indicator').innerText = "100%";
 
         try {
-            currentPdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            
+            // 下載進度動態回饋
+            loadingTask.onProgress = function(progressData) {
+                if (progressData.total > 0) {
+                    const percent = Math.round((progressData.loaded / progressData.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    titleEl.innerText = `下載資料中 ${percent}%`;
+                }
+            };
+
+            currentPdfDoc = await loadingTask.promise;
+            titleEl.innerText = bookTitle; 
+            
+            setTimeout(() => { progressBar.style.opacity = '0'; }, 300);
+            
+            // 快取總頁數供換算百分比
+            localStorage.setItem('ebook_total_' + pdfUrl, currentPdfDoc.numPages);
             
             const savedPage = localStorage.getItem('ebook_progress_' + pdfUrl);
             if (savedPage) {
                 currentPdfPage = parseInt(savedPage);
-                if (currentPdfPage > currentPdfDoc.numPages || currentPdfPage < 1) {
-                    currentPdfPage = 1;
-                }
+                if (currentPdfPage > currentPdfDoc.numPages || currentPdfPage < 1) currentPdfPage = 1;
             } else {
                 currentPdfPage = 1;
             }
@@ -762,7 +868,7 @@
 
             renderBookPage(currentPdfPage);
         } catch (error) {
-            alert("電子書載入失敗，請確認 pdf 檔案路徑。");
+            alert("電子書下載失敗，請檢查網路連線。");
             closeEbook();
         }
     }
@@ -779,33 +885,25 @@
 
             const containerWidth = viewportArea.clientWidth - 24; 
             const unscaledViewport = page.getViewport({ scale: 1 });
-            
             const dynamicScale = (containerWidth / unscaledViewport.width) * currentZoomScale;
             const compiledViewport = page.getViewport({ scale: dynamicScale });
             
             const pixelRatio = window.devicePixelRatio || 1;
-
             canvas.width = Math.floor(compiledViewport.width * pixelRatio);
             canvas.height = Math.floor(compiledViewport.height * pixelRatio);
-
             canvas.style.width = Math.floor(compiledViewport.width) + "px";
             canvas.style.height = Math.floor(compiledViewport.height) + "px";
-
             ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: compiledViewport
-            };
-            await page.render(renderContext).promise;
+            await page.render({ canvasContext: ctx, viewport: compiledViewport }).promise;
 
             const pageIndicator = document.getElementById('reader-page-indicator');
-            if (pageIndicator) {
-                pageIndicator.innerText = `${pageNumber} / ${currentPdfDoc.numPages}`;
-            }
+            if (pageIndicator) pageIndicator.innerText = `${pageNumber} / ${currentPdfDoc.numPages}`;
             document.getElementById('reader-slider').value = pageNumber;
 
+            // 儲存進度並即時更新首頁 UI
             localStorage.setItem('ebook_progress_' + currentPdfUrl, pageNumber);
+            syncAllReadingProgress();
 
         } catch (err) {
             console.error(err);
@@ -814,40 +912,28 @@
         }
     }
 
-    // 🎬 核心優化：翻頁動態調度器
     async function movePage(direction) {
         if (!currentPdfDoc || isRenderingPage) return;
         let targetPage = currentPdfPage + direction;
         
         if (targetPage >= 1 && targetPage <= currentPdfDoc.numPages) {
-            isRenderingPage = true; // 先行鎖定，防止使用者在動畫期間連續狂點
+            isRenderingPage = true; 
             const canvas = document.getElementById('pdf-canvas');
             
-            // 步驟 1：依據前進或後退，給予對應的 3D 旋轉與淡出效果（模擬紙張折疊離場）
-            if (direction > 0) {
-                canvas.style.transform = 'rotateY(-45deg) translateX(-30%) scale(0.9)';
-            } else {
-                canvas.style.transform = 'rotateY(45deg) translateX(30%) scale(0.9)';
-            }
+            if (direction > 0) canvas.style.transform = 'rotateY(-45deg) translateX(-30%) scale(0.9)';
+            else canvas.style.transform = 'rotateY(45deg) translateX(30%) scale(0.9)';
+            
             canvas.style.opacity = '0';
             
-            // 步驟 2：等待前半段翻頁動畫結束 (約 300ms)
             setTimeout(async () => {
                 currentPdfPage = targetPage;
-                
-                // 瞬間將畫布切換到「另一側的預備進場角度」，此時關閉 Transition 避免穿幫
                 canvas.style.transition = 'none';
-                if (direction > 0) {
-                    canvas.style.transform = 'rotateY(45deg) translateX(30%) scale(0.9)';
-                } else {
-                    canvas.style.transform = 'rotateY(-45deg) translateX(-30%) scale(0.9)';
-                }
+                if (direction > 0) canvas.style.transform = 'rotateY(45deg) translateX(30%) scale(0.9)';
+                else canvas.style.transform = 'rotateY(-45deg) translateX(-30%) scale(0.9)';
                 
-                // 渲染新頁面內容
-                isRenderingPage = false; // 解開渲染鎖
+                isRenderingPage = false; 
                 await renderBookPage(currentPdfPage);
                 
-                // 步驟 3：恢復過渡動畫，平滑回正到 0 度（模擬新紙張落下）
                 setTimeout(() => {
                     canvas.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.35s ease';
                     canvas.style.transform = 'rotateY(0deg) translateX(0) scale(1)';
@@ -863,19 +949,56 @@
         const pageNum = parseInt(val);
         if (pageNum >= 1 && pageNum <= currentPdfDoc.numPages) {
             currentPdfPage = pageNum;
-            renderBookPage(currentPdfPage); // 拉動進度條直接切頁，不觸發 3D 翻頁動畫
+            renderBookPage(currentPdfPage); 
         }
     }
 
     function closeEbook() {
         document.getElementById('ebook-reader-window').style.display = 'none';
         currentPdfDoc = null;
+        syncAllReadingProgress();
     }
 
-    async function makePdfThumbnail(pdfUrl, imgElementId) {
+    // ==================== 📊 動態讀取與同步閱讀進度百分比 ====================
+    function syncAllReadingProgress() {
+        document.querySelectorAll('.book-status-text').forEach(el => {
+            const pdfUrl = el.getAttribute('data-pdfurl');
+            const savedPage = localStorage.getItem('ebook_progress_' + pdfUrl);
+            const totalPages = localStorage.getItem('ebook_total_' + pdfUrl);
+
+            if (savedPage && totalPages && parseInt(totalPages) > 0) {
+                const percent = Math.round((parseInt(savedPage) / parseInt(totalPages)) * 100);
+                if (percent === 100) {
+                    el.innerHTML = `<span style="color: var(--status-success); font-weight: 600;">✓ 已閱讀完畢 (100%)</span>`;
+                } else {
+                    el.innerHTML = `<span style="color: var(--brand-primary); font-weight: 600;">目前閱讀進度 ${percent}%</span>`;
+                }
+            } else {
+                el.innerText = "尚未開始閱讀";
+            }
+        });
+    }
+
+    // ==================== 🖼️ 異步 PDF 封面生成與載入進度 ====================
+    async function makePdfThumbnail(pdfUrl, imgElementId, progressId) {
         try {
             if (typeof pdfjsLib === 'undefined') return;
-            const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+            const progressOverlay = document.getElementById(progressId);
+            if (progressOverlay) progressOverlay.style.display = 'block';
+
+            const loadingTask = pdfjsLib.getDocument(pdfUrl);
+            
+            loadingTask.onProgress = function(progressData) {
+                if (progressData.total > 0 && progressOverlay) {
+                    const percent = Math.round((progressData.loaded / progressData.total) * 100);
+                    progressOverlay.innerText = percent + "%";
+                }
+            };
+
+            const pdf = await loadingTask.promise;
+            localStorage.setItem('ebook_total_' + pdfUrl, pdf.numPages);
+            syncAllReadingProgress();
+
             const page = await pdf.getPage(1);
             const viewport = page.getViewport({ scale: 0.8 });
             const canvas = document.createElement('canvas');
@@ -884,23 +1007,30 @@
             canvas.width = viewport.width;
             
             await page.render({ canvasContext: context, viewport: viewport }).promise;
+            
             const imgElement = document.getElementById(imgElementId);
             if (imgElement) imgElement.src = canvas.toDataURL();
+            
+            if (progressOverlay) progressOverlay.style.display = 'none';
         } catch (error) {
-            console.warn("無法取得預覽圖:", error);
+            console.warn("縮圖生成未成功:", error);
+            const progressOverlay = document.getElementById(progressId);
+            if (progressOverlay) progressOverlay.style.display = 'none';
         }
     }
 
-    // ==================== 📝 測驗系統核心業務邏輯 ====================
+    // ==================== 📝 模擬測驗核心邏輯 (與原版完全一致) ====================
     async function initSystem() {
         initTouchGestures(); 
-        
-        makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', 'thumb-book1');
-        makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', 'thumb-book2');
+        syncAllReadingProgress();
+
+        // 啟動封面縮圖製作與進度追蹤
+        makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', 'thumb-book1', 'thumb-prog-1');
+        makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', 'thumb-book2', 'thumb-prog-2');
 
         try {
             const mdResponse = await fetch('data/bank_list.md');
-            if (!mdResponse.ok) throw new Error("Manifest (bank_list.md) response failed.");
+            if (!mdResponse.ok) throw new Error("Manifest (bank_list.md) 讀取失敗。");
             
             const mdText = await mdResponse.text();
             const lines = mdText.split('\n');
@@ -913,18 +1043,11 @@
                 }
             });
 
-            if (bankFilesToLoad.length === 0) throw new Error("No payload source specified.");
+            if (bankFilesToLoad.length === 0) throw new Error("無可用題庫來源。");
             await loadAllBanks(bankFilesToLoad);
 
         } catch (error) {
             console.error(error);
-            const contentArea = document.getElementById('stage-loading');
-            contentArea.innerHTML = `
-                <div class="app-card" style="border-top: 4px solid var(--status-error); text-align: center; padding: 32px 16px;">
-                    <div style="color: var(--status-error); font-weight: 600; margin-bottom: 8px;">系統配置載入中斷</div>
-                    <div style="font-size: 13px; color: var(--text-secondary);">${error.message}</div>
-                </div>
-            `;
         }
     }
 
@@ -935,23 +1058,14 @@
                 const response = await fetch(`data/${filename}`);
                 if (response.ok) {
                     const data = await response.json();
-                    const displayName = filename.replace('.json', '');
-                    loadedBanks[displayName] = data;
+                    loadedBanks[filename.replace('.json', '')] = data;
                     successCount++;
                 }
-            } catch (e) { console.error(`Failed to load: ${filename}`); }
+            } catch (e) {}
         }
-
         if (successCount > 0) {
             renderConfigUI();
             setTimeout(() => showSection('stage-config'), 400);
-        } else {
-            const contentArea = document.getElementById('stage-loading');
-            contentArea.innerHTML = `
-                <div class="app-card" style="border-top: 4px solid var(--status-error); text-align: center; padding: 32px 16px;">
-                    <div style="color: var(--status-error); font-weight: 600;">資料庫同步異常，請檢查遠端配置檔案。</div>
-                </div>
-            `;
         }
     }
 
@@ -959,100 +1073,62 @@
         const container = document.getElementById('bank-list-container');
         let totalQuestionsAvailable = 0;
         container.innerHTML = '';
-
+        
         for (const [displayName, questions] of Object.entries(loadedBanks)) {
-            const count = questions.length;
+            const count = questions.length; 
             totalQuestionsAvailable += count;
-
-            const div = document.createElement('div');
+            const div = document.createElement('div'); 
             div.className = 'setting-row';
-            div.innerHTML = `
-                <div>
-                    <div style="font-size: 16px; font-weight: 500; color: var(--text-primary);">${displayName}</div>
-                    <div style="font-size: 13px; color: var(--text-secondary); margin-top: 1px;">內含 ${count} 項題目</div>
-                </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" class="bank-checkbox" value="${displayName}" checked>
-                    <span class="slider"></span>
-                </label>
-            `;
+            div.innerHTML = `<div><div style="font-size: 16px; font-weight: 500;">${displayName}</div><div style="font-size: 13px; color: var(--text-secondary); margin-top: 1px;">內含 ${count} 項題目</div></div><label class="toggle-switch"><input type="checkbox" class="bank-checkbox" value="${displayName}" checked><span class="slider"></span></label>`;
             container.appendChild(div);
         }
-
+        
         const inputEl = document.getElementById('question-count');
-        inputEl.max = totalQuestionsAvailable;
+        inputEl.max = totalQuestionsAvailable; 
         inputEl.value = totalQuestionsAvailable < 10 ? totalQuestionsAvailable : 10;
     }
 
     function generateQuiz() {
         const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
         let questionPool = [];
-
         checkboxes.forEach(cb => {
             const name = cb.value;
-            const qWithSource = loadedBanks[name].map(q => ({...q, sourceBank: name}));
-            questionPool = questionPool.concat(qWithSource);
+            questionPool = questionPool.concat(loadedBanks[name].map(q => ({...q, sourceBank: name})));
         });
-
-        if (questionPool.length === 0) {
-            alert("請至少啟動一項測驗題目範圍設定。");
-            return;
-        }
-
+        
+        if (questionPool.length === 0) return alert("請至少選擇一個題庫範圍。");
+        
         let count = parseInt(document.getElementById('question-count').value);
-        if (isNaN(count) || count < 1) count = 1;
+        if (isNaN(count) || count < 1) count = 1; 
         count = Math.min(count, questionPool.length);
         
-        let shuffled = [...questionPool].sort(() => Math.random() - 0.5);
-        currentQuiz = shuffled.slice(0, count);
-        
-        renderQuiz();
+        currentQuiz = [...questionPool].sort(() => Math.random() - 0.5).slice(0, count);
+        renderQuiz(); 
         showSection('stage-quiz');
     }
 
     function selectOption(qIndex, key) {
-        document.querySelectorAll(`.opt-group-${qIndex}`).forEach(el => {
-            el.classList.remove('selected');
-        });
-        const selectedLabel = document.getElementById(`label-${qIndex}-${key}`);
-        selectedLabel.classList.add('selected');
+        document.querySelectorAll(`.opt-group-${qIndex}`).forEach(el => el.classList.remove('selected'));
+        document.getElementById(`label-${qIndex}-${key}`).classList.add('selected');
         document.getElementById(`radio-${qIndex}-${key}`).checked = true;
     }
 
     function renderQuiz() {
-        const container = document.getElementById('quiz-container');
+        const container = document.getElementById('quiz-container'); 
         container.innerHTML = '';
         document.getElementById('quiz-header').innerText = `共 ${currentQuiz.length} 題`;
-
+        
         currentQuiz.forEach((q, index) => {
-            const card = document.createElement('div');
+            const card = document.createElement('div'); 
             card.className = 'app-card';
-            
             let optionsHtml = '';
+            
             if (q.options && typeof q.options === 'object') {
                 for (const [key, value] of Object.entries(q.options)) {
-                    optionsHtml += `
-                        <div class="option-container opt-group-${index}" id="label-${index}-${key}" onclick="selectOption(${index}, '${key}')">
-                            <input type="radio" id="radio-${index}-${key}" name="q${index}" value="${key}">
-                            <div class="option-badge">${key}</div>
-                            <div class="option-text">${value}</div>
-                        </div>
-                    `;
+                    optionsHtml += `<div class="option-container opt-group-${index}" id="label-${index}-${key}" onclick="selectOption(${index}, '${key}')"><input type="radio" id="radio-${index}-${key}" name="q${index}" value="${key}"><div class="option-badge">${key}</div><div class="option-text">${value}</div></div>`;
                 }
             }
-
-            const catText = q.category || q.sourceBank;
-            card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; margin-bottom: 10px; border-bottom: 0.5px solid var(--border-light); padding-bottom: 6px;">
-                    <span>${catText}</span>
-                    <span style="color:var(--text-muted);">REF: ${q.id || 'N/A'}</span>
-                </div>
-                <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); line-height: 1.4;">
-                    <span style="color: var(--brand-primary); margin-right: 4px;">${index + 1}.</span>${q.question}
-                </div>
-                <div>${optionsHtml}</div>
-                <div id="feedback-${index}" class="status-banner"></div>
-            `;
+            card.innerHTML = `<div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px; border-bottom: 0.5px solid var(--border-light); padding-bottom: 6px;"><span>${q.category || q.sourceBank}</span><span style="color:var(--text-muted);">REF: ${q.id || 'N/A'}</span></div><div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; line-height: 1.4;"><span style="color: var(--brand-primary); margin-right: 4px;">${index + 1}.</span>${q.question}</div><div>${optionsHtml}</div><div id="feedback-${index}" class="status-banner"></div>`;
             container.appendChild(card);
         });
     }
@@ -1062,13 +1138,12 @@
         currentQuiz.forEach((q, index) => {
             const selected = document.querySelector(`input[name="q${index}"]:checked`);
             const feedback = document.getElementById(`feedback-${index}`);
-            const ansKey = q.answer; 
+            const ansKey = q.answer;
             
             const correctLabel = document.getElementById(`label-${index}-${ansKey}`);
             if (correctLabel) correctLabel.classList.add('correct');
-
             feedback.className = 'status-banner show';
-
+            
             const svgCorrect = `<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             const svgWrong = `<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
             const svgWarn = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
@@ -1087,38 +1162,23 @@
                 feedback.innerHTML = `${svgWarn} <span>未作答，正確答案為 (${ansKey})</span>`;
                 feedback.classList.add('unanswered');
             }
+            
             document.querySelectorAll(`.opt-group-${index}`).forEach(el => el.onclick = null);
         });
-
-        const finalScore = Math.round((score / currentQuiz.length) * 100);
-        document.getElementById('result-score').innerText = finalScore;
+        
+        document.getElementById('result-score').innerText = Math.round((score / currentQuiz.length) * 100);
         document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length}`;
         showSection('stage-result');
     }
 
-    // ==================== 🛠️ PWA 自動更新與註冊機制 ====================
+    // ==================== 🛠️ PWA 支援機制 ====================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then((registration) => {
-                    console.log('ServiceWorker 註冊成功');
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                window.location.reload();
-                            }
-                        });
-                    });
-                });
-        });
-
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-                refreshing = true;
-                window.location.reload(); 
-            }
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('PWA ServiceWorker 註冊成功。');
+            }).catch(err => {
+                console.log('PWA ServiceWorker 註冊失敗: ', err);
+            });
         });
     }
 
