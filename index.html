@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>專業測驗與閱讀系統</title>
-    <!-- 引入 PWA 清單與核心 PDF.js -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
@@ -47,19 +46,66 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* --- 📱 頂部導覽列 (新增漢堡選單支援) --- */
         header {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             padding: 14px 16px;
-            text-align: center;
-            font-size: 17px;
-            font-weight: 600;
-            letter-spacing: -0.4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             border-bottom: 0.5px solid var(--border-light);
             z-index: 100;
             flex-shrink: 0;
+            position: relative;
         }
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.4px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .hamburger-btn {
+            background: none;
+            border: none;
+            color: var(--brand-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 101;
+            padding: 4px;
+        }
+        .hamburger-btn .svg-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* --- 🍔 側邊漢堡選單與遮罩樣式 --- */
+        .side-menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
+        }
+        .side-menu-overlay.show { opacity: 1; visibility: visible; }
+        
+        .side-menu {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: var(--ios-bg); z-index: 1001;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1);
+        }
+        .side-menu.show { transform: translateX(280px); }
+        .side-menu-header {
+            padding: 14px 16px; background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid var(--border-light);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .side-menu-content { flex: 1; overflow-y: auto; padding: 16px; }
 
         main {
             flex: 1;
@@ -88,9 +134,7 @@
             transition: transform 0.2s ease;
         }
 
-        .book-card:active {
-            transform: scale(0.96);
-        }
+        .book-card:active { transform: scale(0.96); }
 
         .book-cover-wrapper {
             position: relative;
@@ -116,183 +160,66 @@
             z-index: 5;
         }
 
-        .book-cover-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .book-info {
-            margin-top: 10px;
-            padding: 0 2px;
-        }
-
+        .book-cover-img { width: 100%; height: 100%; object-fit: cover; }
+        .book-info { margin-top: 10px; padding: 0 2px; }
         .book-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; 
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 36.4px; 
+            font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 36.4px; 
         }
-
-        .book-status-meta {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-            font-weight: 500;
-        }
+        .book-status-meta { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
 
         .thumb-progress-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 122, 255, 0.8);
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            z-index: 10;
-            display: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 122, 255, 0.8); color: #ffffff; font-size: 16px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10; display: none;
         }
 
         /* --- 📚 題庫書本選取特效 --- */
-        .quiz-bank-card {
-            position: relative;
-        }
+        .quiz-bank-card { position: relative; }
         .check-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 26px;
-            height: 26px;
-            background-color: var(--brand-primary);
-            color: white;
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            z-index: 20;
+            position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
+            background-color: var(--brand-primary); color: white; border-radius: 50%;
+            display: none; align-items: center; justify-content: center; border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 20;
         }
-        .quiz-bank-card.selected .check-badge {
-            display: flex;
-        }
-        .quiz-bank-card:not(.selected) .book-cover-wrapper {
-            opacity: 0.6;
-            filter: grayscale(80%);
-        }
+        .quiz-bank-card.selected .check-badge { display: flex; }
+        .quiz-bank-card:not(.selected) .book-cover-wrapper { opacity: 0.6; filter: grayscale(80%); }
 
         /* ────────────────────────── */
-
         .bottom-nav {
-            position: fixed;
-            bottom: calc(50px + env(safe-area-inset-bottom));
-            left: 0;
-            width: 100%;
+            position: fixed; bottom: calc(50px + env(safe-area-inset-bottom)); left: 0; width: 100%;
             background: linear-gradient(to top, rgba(242,242,247,0.95) 80%, rgba(242,242,247,0));
-            padding: 16px;
-            z-index: 150;
-            display: none;
+            padding: 16px; z-index: 150; display: none;
         }
 
         .ios-tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: calc(50px + env(safe-area-inset-bottom));
-            background: rgba(249, 249, 249, 0.94);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid var(--border-light);
-            display: flex;
-            z-index: 200;
-            padding-bottom: env(safe-area-inset-bottom);
+            position: fixed; bottom: 0; left: 0; width: 100%; height: calc(50px + env(safe-area-inset-bottom));
+            background: rgba(249, 249, 249, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid var(--border-light); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom);
         }
-        .tab-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--brand-inactive);
-            cursor: pointer;
-            transition: color 0.15s ease;
-        }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--brand-inactive); cursor: pointer; transition: color 0.15s ease; }
         .tab-item.active { color: var(--brand-primary); }
-        .tab-icon {
-            width: 22px; height: 22px; margin-bottom: 2px;
-            fill: none; stroke: currentColor; stroke-width: 2.2;
-        }
+        .tab-icon { width: 22px; height: 22px; margin-bottom: 2px; fill: none; stroke: currentColor; stroke-width: 2.2; }
         .tab-label { font-size: 10px; font-weight: 500; }
 
-        .ebook-window {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #f2f2f7; z-index: 500; display: none;
-            flex-direction: column;
-        }
-        .reader-header {
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 10px 16px; display: flex; justify-content: space-between;
-            align-items: center; border-bottom: 0.5px solid var(--border-light);
-            height: 54px; position: relative;
-        }
-        #reader-progress-bar {
-            position: absolute; bottom: -1px; left: 0; height: 2px;
-            background: var(--brand-primary); width: 0%; transition: width 0.2s; z-index: 10;
-        }
-        .btn-close {
-            color: var(--brand-primary); font-size: 16px; font-weight: 500;
-            background: none; border: none; cursor: pointer;
-        }
-        .reader-title {
-            font-size: 15px; font-weight: 600; max-width: 40%;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            letter-spacing: -0.2px; text-align: center;
-        }
+        .ebook-window { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f2f2f7; z-index: 500; display: none; flex-direction: column; }
+        .reader-header { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--border-light); height: 54px; position: relative; }
+        #reader-progress-bar { position: absolute; bottom: -1px; left: 0; height: 2px; background: var(--brand-primary); width: 0%; transition: width 0.2s; z-index: 10; }
+        .btn-close { color: var(--brand-primary); font-size: 16px; font-weight: 500; background: none; border: none; cursor: pointer; }
+        .reader-title { font-size: 15px; font-weight: 600; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -0.2px; text-align: center; }
         .zoom-controls { display: flex; align-items: center; gap: 4px; background: #e5e5ea; padding: 2px; border-radius: 8px; }
         .btn-zoom { background: none; border: none; color: var(--text-primary); font-size: 14px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
         .btn-zoom:active { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .zoom-text { font-size: 11px; color: var(--text-secondary); min-width: 36px; text-align: center; font-weight: 500; }
-        .reader-viewport {
-            flex: 1; overflow: auto; display: flex; justify-content: center;
-            align-items: flex-start; padding: 12px; touch-action: pan-x pan-y;
-            -webkit-overflow-scrolling: touch; perspective: 1200px;
-        }
-        #pdf-canvas {
-            background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-radius: 6px; display: block; transform-origin: center center;
-            transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.32s ease;
-            backface-visibility: hidden;
-        }
-        .reader-footer {
-            background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px); padding: 16px;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            border-top: 0.5px solid var(--border-light); display: flex;
-            flex-direction: column; gap: 12px; align-items: center;
-        }
+        .reader-viewport { flex: 1; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 12px; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; perspective: 1200px; }
+        #pdf-canvas { background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 6px; display: block; transform-origin: center center; transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.32s ease; backface-visibility: hidden; }
+        .reader-footer { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-top: 0.5px solid var(--border-light); display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .page-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
-        .btn-page {
-            width: 38px; height: 38px; border-radius: 50%; background: #e5e5ea;
-            border: none; color: var(--text-primary); font-size: 15px; display: flex;
-            align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;
-        }
+        .btn-page { width: 38px; height: 38px; border-radius: 50%; background: #e5e5ea; border: none; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
         .btn-page:active { background: #d1d1d6; }
         .ios-slider { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #d1d1d6; outline: none; }
-        .ios-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 26px; height: 26px;
-            border-radius: 50%; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer;
-        }
+        .ios-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer; }
 
         .section { display: none; opacity: 0; }
         .section.active { display: block; opacity: 1; animation: iosSlideUp 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
@@ -300,12 +227,7 @@
 
         .app-card { background: var(--ios-surface); border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: none; border: none; }
         .card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.2px; }
-        .btn-action {
-            width: 100%; padding: 14px 24px; border-radius: 12px; font-size: 17px;
-            font-weight: 600; border: none; cursor: pointer; color: #ffffff;
-            background-color: var(--brand-primary); transition: var(--transition-ios);
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-        }
+        .btn-action { width: 100%; padding: 14px 24px; border-radius: 12px; font-size: 17px; font-weight: 600; border: none; cursor: pointer; color: #ffffff; background-color: var(--brand-primary); transition: var(--transition-ios); display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-action:active { opacity: 0.7; transform: scale(0.99); }
         .btn-secondary { background-color: var(--ios-surface); color: var(--brand-primary); }
         
@@ -316,17 +238,9 @@
         .input-number-wrapper { display: flex; align-items: center; background: #eeeeee; border-radius: 8px; padding: 6px 12px; flex-shrink: 0; margin-left: 16px; }
         .input-number-wrapper input { width: 50px; border: none; background: transparent; text-align: center; font-size: 16px; font-weight: 500; outline: none; }
 
-        .option-container {
-            display: flex; align-items: center; padding: 14px 16px; margin-bottom: 10px;
-            border-radius: 10px; background-color: var(--ios-sub-bg); border: 0.5px solid var(--border-light); cursor: pointer;
-        }
+        .option-container { display: flex; align-items: center; padding: 14px 16px; margin-bottom: 10px; border-radius: 10px; background-color: var(--ios-sub-bg); border: 0.5px solid var(--border-light); cursor: pointer; }
         .option-container input[type="radio"] { display: none; }
-        .option-badge {
-            flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
-            border: 1px solid #c6c6c8; background: #ffffff; display: flex;
-            align-items: center; justify-content: center; font-size: 12px;
-            font-weight: 600; color: var(--text-secondary); margin-right: 12px;
-        }
+        .option-badge { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #c6c6c8; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-right: 12px; }
         .option-text { font-size: 15px; color: var(--text-primary); line-height: 1.4; }
         .option-container.selected { border-color: var(--brand-primary); background-color: #f2f8ff; }
         .option-container.selected .option-badge { background-color: var(--brand-primary); border-color: var(--brand-primary); color: #ffffff; }
@@ -358,17 +272,56 @@
 </head>
 <body>
 
-    <header id="nav-title">教科書書城</header>
+    <header>
+        <button class="hamburger-btn" onclick="toggleMenu()">
+            <svg class="svg-icon" viewBox="0 0 24 24">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <div class="header-title" id="nav-title">教科書書城</div>
+        <div style="width: 28px;"></div> </header>
+
+    <div id="side-menu-overlay" class="side-menu-overlay" onclick="toggleMenu()"></div>
+    <div id="side-menu" class="side-menu">
+        <div class="side-menu-header">
+            <span style="font-size: 17px; font-weight: 600;">系統資訊</span>
+            <button class="btn-close" onclick="toggleMenu()">✕</button>
+        </div>
+        <div class="side-menu-content">
+            <div class="app-card" style="margin-bottom: 16px; padding: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div style="width: 48px; height: 48px; background: var(--brand-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
+                        <svg class="svg-icon" viewBox="0 0 24 24" style="width: 28px; height: 28px;">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 16px; font-weight: 600;">專業測驗閱讀系統</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">版本 v1.4.1</div>
+                    </div>
+                </div>
+                <div class="setting-row" style="padding-bottom: 8px;">
+                    <div style="font-size: 14px; color: var(--text-secondary);">開發團隊</div>
+                    <div style="font-size: 14px; font-weight: 500;">6792@gcloud.csu.edu.tw</div>
+                </div>
+                <div class="setting-row" style="border: none; padding-top: 8px;">
+                    <div style="font-size: 14px; color: var(--text-secondary);">核心引擎</div>
+                    <div style="font-size: 14px; font-weight: 500;">PDF.js & Web PWA</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main id="main-content">
         
-        <!-- Tab 1: 教科書書城網格區 -->
         <div id="tab-content-reading" class="tab-content active">
             <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 12px; letter-spacing: -0.1px;">我的智慧書架</div>
             
             <div class="book-grid">
-                <!-- 書籍卡片 1 -->
-                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '（初級）第一科：人工智慧基礎概論')">
+                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '第一科：人工智慧基礎概論')">
                     <div class="book-cover-wrapper">
                         <img id="thumb-book1" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
                         <div id="thumb-prog-1" class="thumb-progress-overlay">0%</div>
@@ -379,8 +332,7 @@
                     </div>
                 </div>
 
-                <!-- 書籍卡片 2 -->
-                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '（初級）第二科：生成式 AI 應用與規劃')">
+                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '第二科：生成式 AI 應用與規劃')">
                     <div class="book-cover-wrapper">
                         <img id="thumb-book2" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
                         <div id="thumb-prog-2" class="thumb-progress-overlay">0%</div>
@@ -393,9 +345,7 @@
             </div>
         </div>
 
-        <!-- Tab 2: 測驗功能區 -->
         <div id="tab-content-quiz" class="tab-content">
-            <!-- 階段一：加載骨架屏 -->
             <div id="stage-loading" class="section active">
                 <div class="skeleton-card">
                     <div class="skeleton-line" style="width: 40%; height: 20px; margin-bottom: 12px;"></div>
@@ -404,11 +354,9 @@
                 </div>
             </div>
 
-            <!-- 階段二：考卷範圍與題數設定 -->
             <div id="stage-config" class="section">
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px;">選擇測驗題庫</div>
                 
-                <!-- 修改為書架樣式 -->
                 <div class="book-grid" id="bank-list-container" style="margin-bottom: 16px;"></div>
 
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 16px 4px 8px;">考卷設定</div>
@@ -424,7 +372,6 @@
                 </div>
             </div>
 
-            <!-- 階段三：題目填答區 -->
             <div id="stage-quiz" class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px;">
                     <span style="font-size: 12px; font-weight: 600; color: var(--brand-primary);">測驗進行中</span>
@@ -433,7 +380,6 @@
                 <div id="quiz-container"></div>
             </div>
 
-            <!-- 階段四：結果結算與詳解複查 -->
             <div id="stage-result" class="section">
                 <div class="app-card">
                     <div class="score-circle-view">
@@ -452,7 +398,6 @@
         </footer>
     </main>
 
-    <!-- 各階段對應的 iOS 固定底部控制鈕 -->
     <div class="bottom-nav" id="action-bar-config">
         <button class="btn-action" onclick="generateQuiz()"><span>開始測驗</span></button>
     </div>
@@ -463,7 +408,6 @@
         <button class="btn-action btn-secondary" onclick="location.reload()"><span>開始新測驗</span></button>
     </div>
 
-    <!-- 全局主導覽分頁列 -->
     <nav class="ios-tab-bar">
         <div class="tab-item active" id="tab-btn-reading" onclick="switchGlobalTab('reading')">
             <svg class="tab-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -475,7 +419,6 @@
         </div>
     </nav>
 
-    <!-- PDF 全螢幕電子書檢視器視窗 -->
     <div id="ebook-reader-window" class="ebook-window">
         <div class="reader-header">
             <button class="btn-close" onclick="closeEbook()">✕ 關閉</button>
@@ -485,7 +428,6 @@
                 <span class="zoom-text" id="zoom-indicator">100%</span>
                 <button class="btn-zoom" onclick="adjustZoom(0.25)">+</button>
             </div>
-            <!-- 主 PDF 載入的頂部線性下載進度條 -->
             <div id="reader-progress-bar"></div>
         </div>
         
@@ -504,10 +446,9 @@
     </div>
 
 <script>
-    // 指定 PDF.js Worker 核心
+    // 指定 PDF.js Worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // 全局狀態變數
     let loadedBanks = {}; 
     let currentQuiz = []; 
     let activeGlobalTab = 'reading'; 
@@ -522,6 +463,15 @@
     let touchStartX = 0; let touchEndX = 0;
     let touchStartY = 0; let touchEndY = 0;
 
+    // --- 🍔 漢堡側邊選單開關邏輯 ---
+    function toggleMenu() {
+        const menu = document.getElementById('side-menu');
+        const overlay = document.getElementById('side-menu-overlay');
+        menu.classList.toggle('show');
+        overlay.classList.toggle('show');
+    }
+
+    // --- 手機左右滑動翻頁 ---
     function initTouchGestures() {
         const viewportArea = document.getElementById('viewport-area');
         if (!viewportArea) return;
@@ -554,6 +504,7 @@
         }
     }
 
+    // --- 全局 Tab 頁面切換控制 ---
     function switchGlobalTab(tabId) {
         activeGlobalTab = tabId;
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
@@ -590,6 +541,7 @@
         if (activeQuizSection === 'stage-result') document.getElementById('action-bar-result').style.display = 'block';
     }
 
+    // --- PDF 閱讀邏輯與進度監聽 ---
     async function openEbook(pdfUrl, bookTitle) {
         currentPdfUrl = pdfUrl; 
         const readerWin = document.getElementById('ebook-reader-window');
@@ -731,6 +683,7 @@
         syncAllReadingProgress();
     }
 
+    // --- 動態讀取與同步閱讀進度百分比 ---
     function syncAllReadingProgress() {
         document.querySelectorAll('.book-status-text').forEach(el => {
             const pdfUrl = el.getAttribute('data-pdfurl');
@@ -750,6 +703,7 @@
         });
     }
 
+    // --- 異步 PDF 封面生成與載入進度 ---
     async function makePdfThumbnail(pdfUrl, imgElementId, progressId) {
         try {
             if (typeof pdfjsLib === 'undefined') return;
@@ -761,7 +715,6 @@
             loadingTask.onProgress = function(progressData) {
                 if (progressData.total > 0 && progressOverlay) {
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
-                    
                     if (percent >= 100) {
                         progressOverlay.style.display = 'none';
                     } else {
@@ -794,6 +747,7 @@
         }
     }
 
+    // --- 模擬測驗核心邏輯 ---
     async function initSystem() {
         initTouchGestures(); 
         syncAllReadingProgress();
@@ -842,7 +796,6 @@
         }
     }
 
-    // ─── 修改：將原本的單調列表改為書架卡片 UI ───
     function renderConfigUI() {
         const container = document.getElementById('bank-list-container');
         let totalQuestionsAvailable = 0;
@@ -853,16 +806,14 @@
             totalQuestionsAvailable += count;
             
             const card = document.createElement('div');
-            // 預設加上 selected 表示已勾選[cite: 2]
             card.className = 'book-card quiz-bank-card selected'; 
             card.onclick = function() {
                 this.classList.toggle('selected');
                 const cb = this.querySelector('.bank-checkbox');
                 cb.checked = !cb.checked;
-                updateQuestionCountLimit(); // 點擊時同步更新總題數
+                updateQuestionCountLimit(); 
             };
 
-            // 使用漸層色作為題庫的預設封面，並加上勾勾徽章
             card.innerHTML = `
                 <div class="book-cover-wrapper">
                     <div class="check-badge">
@@ -888,7 +839,6 @@
         inputEl.value = totalQuestionsAvailable < 10 ? totalQuestionsAvailable : 10;
     }
 
-    // 新增：動態更新「隨機抽取數量」上限防呆邏輯
     function updateQuestionCountLimit() {
         const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
         let currentTotal = 0;
@@ -907,7 +857,6 @@
             inputEl.value = Math.min(10, currentTotal);
         }
     }
-    // ───────────────────────────────────────────
 
     function generateQuiz() {
         const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
