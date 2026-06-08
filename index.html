@@ -10,20 +10,20 @@
     <style>
         /* iOS 官方系統色彩規範 */
         :root {
-            --ios-bg: #f2f2f7;                 /* iOS Grouped Background */
-            --ios-surface: #ffffff;            /* iOS Secondary System Background */
+            --ios-bg: #f2f2f7;                 
+            --ios-surface: #ffffff;            
             --ios-sub-bg: #fafafa;
-            --text-primary: #000000;           /* iOS Primary Label */
-            --text-secondary: #3c3c4399;       /* iOS Secondary Label */
-            --text-muted: #3c3c434d;           /* iOS Tertiary Label */
-            --brand-primary: #007aff;          /* iOS System Blue */
+            --text-primary: #000000;           
+            --text-secondary: #3c3c4399;       
+            --text-muted: #3c3c434d;           
+            --brand-primary: #007aff;          
             --brand-hover: #0062cc;
-            --brand-inactive: #8e8e93;         /* iOS Tab 灰 */
-            --status-success: #34c759;         /* iOS System Green */
+            --brand-inactive: #8e8e93;         
+            --status-success: #34c759;         
             --status-success-bg: #f2fbf4;
-            --status-error: #ff3b30;           /* iOS System Red */
+            --status-error: #ff3b30;           
             --status-error-bg: #fff5f5;
-            --status-warning: #ff9500;         /* iOS System Orange */
+            --status-warning: #ff9500;         
             --status-warning-bg: #fff9f0;
             --border-light: #3c3c432e;
             --transition-ios: all 0.28s cubic-bezier(0.25, 1, 0.5, 1);
@@ -69,12 +69,8 @@
             scroll-behavior: smooth;
         }
 
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         /* --- 🛒 電子書城網格佈局 ─── */
         .book-grid {
@@ -96,11 +92,10 @@
             transform: scale(0.96);
         }
 
-        /* 模擬真實書本封面的容器 */
         .book-cover-wrapper {
             position: relative;
             width: 100%;
-            aspect-ratio: 3 / 4; /* 標準書籍黃金比例 */
+            aspect-ratio: 3 / 4; 
             background: #ffffff;
             border-radius: 8px;
             overflow: hidden;
@@ -109,9 +104,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.3s ease, filter 0.3s ease;
         }
 
-        /* 書脊陰影特效，讓它更像實體書 */
         .book-cover-wrapper::after {
             content: "";
             position: absolute;
@@ -138,10 +133,10 @@
             color: var(--text-primary);
             line-height: 1.3;
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* 最多顯示兩行 */
+            -webkit-line-clamp: 2; 
             -webkit-box-orient: vertical;
             overflow: hidden;
-            height: 36.4px; /* 固定高度防止排版錯位 */
+            height: 36.4px; 
         }
 
         .book-status-meta {
@@ -151,7 +146,6 @@
             font-weight: 500;
         }
 
-        /* 全滿版縮圖上下載進度 Overlay */
         .thumb-progress-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -167,9 +161,37 @@
             z-index: 10;
             display: none;
         }
+
+        /* --- 📚 題庫書本選取特效 --- */
+        .quiz-bank-card {
+            position: relative;
+        }
+        .check-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 26px;
+            height: 26px;
+            background-color: var(--brand-primary);
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 20;
+        }
+        .quiz-bank-card.selected .check-badge {
+            display: flex;
+        }
+        .quiz-bank-card:not(.selected) .book-cover-wrapper {
+            opacity: 0.6;
+            filter: grayscale(80%);
+        }
+
         /* ────────────────────────── */
 
-        /* 底部按鈕區 - 完全模擬 iOS 行動介面 */
         .bottom-nav {
             position: fixed;
             bottom: calc(50px + env(safe-area-inset-bottom));
@@ -181,7 +203,6 @@
             display: none;
         }
 
-        /* 系統核心導覽列 */
         .ios-tab-bar {
             position: fixed;
             bottom: 0;
@@ -206,467 +227,133 @@
             cursor: pointer;
             transition: color 0.15s ease;
         }
-        .tab-item.active {
-            color: var(--brand-primary);
-        }
+        .tab-item.active { color: var(--brand-primary); }
         .tab-icon {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 2px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2.2;
+            width: 22px; height: 22px; margin-bottom: 2px;
+            fill: none; stroke: currentColor; stroke-width: 2.2;
         }
-        .tab-label {
-            font-size: 10px;
-            font-weight: 500;
-        }
+        .tab-label { font-size: 10px; font-weight: 500; }
 
-        /* PDF 電子書滿版閱讀面板 */
         .ebook-window {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #f2f2f7;
-            z-index: 500;
-            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f2f2f7; z-index: 500; display: none;
             flex-direction: column;
         }
         .reader-header {
             background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 10px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 0.5px solid var(--border-light);
-            height: 54px;
-            position: relative;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 10px 16px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 0.5px solid var(--border-light);
+            height: 54px; position: relative;
         }
-        /* 頂部下載進度條 */
         #reader-progress-bar {
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            height: 2px;
-            background: var(--brand-primary);
-            width: 0%;
-            transition: width 0.2s;
-            z-index: 10;
+            position: absolute; bottom: -1px; left: 0; height: 2px;
+            background: var(--brand-primary); width: 0%; transition: width 0.2s; z-index: 10;
         }
         .btn-close {
-            color: var(--brand-primary);
-            font-size: 16px;
-            font-weight: 500;
-            background: none;
-            border: none;
-            cursor: pointer;
+            color: var(--brand-primary); font-size: 16px; font-weight: 500;
+            background: none; border: none; cursor: pointer;
         }
         .reader-title {
-            font-size: 15px;
-            font-weight: 600;
-            max-width: 40%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            letter-spacing: -0.2px;
-            text-align: center;
+            font-size: 15px; font-weight: 600; max-width: 40%;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            letter-spacing: -0.2px; text-align: center;
         }
-        .zoom-controls {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: #e5e5ea;
-            padding: 2px;
-            border-radius: 8px;
-        }
-        .btn-zoom {
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .btn-zoom:active {
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .zoom-text {
-            font-size: 11px;
-            color: var(--text-secondary);
-            min-width: 36px;
-            text-align: center;
-            font-weight: 500;
-        }
+        .zoom-controls { display: flex; align-items: center; gap: 4px; background: #e5e5ea; padding: 2px; border-radius: 8px; }
+        .btn-zoom { background: none; border: none; color: var(--text-primary); font-size: 14px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+        .btn-zoom:active { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .zoom-text { font-size: 11px; color: var(--text-secondary); min-width: 36px; text-align: center; font-weight: 500; }
         .reader-viewport {
-            flex: 1;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 12px;
-            touch-action: pan-x pan-y;
-            -webkit-overflow-scrolling: touch;
-            perspective: 1200px;
+            flex: 1; overflow: auto; display: flex; justify-content: center;
+            align-items: flex-start; padding: 12px; touch-action: pan-x pan-y;
+            -webkit-overflow-scrolling: touch; perspective: 1200px;
         }
         #pdf-canvas {
-            background: #ffffff;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-radius: 6px;
-            display: block;
-            transform-origin: center center;
+            background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 6px; display: block; transform-origin: center center;
             transition: transform 0.32s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.32s ease;
             backface-visibility: hidden;
         }
         .reader-footer {
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 16px;
+            background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px); padding: 16px;
             padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            border-top: 0.5px solid var(--border-light);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
+            border-top: 0.5px solid var(--border-light); display: flex;
+            flex-direction: column; gap: 12px; align-items: center;
         }
-        .page-controls {
-            display: flex;
-            width: 100%;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .page-controls { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         .btn-page {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: #e5e5ea;
-            border: none;
-            color: var(--text-primary);
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.2s;
+            width: 38px; height: 38px; border-radius: 50%; background: #e5e5ea;
+            border: none; color: var(--text-primary); font-size: 15px; display: flex;
+            align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;
         }
-        .btn-page:active {
-            background: #d1d1d6;
-        }
-        .ios-slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 4px;
-            border-radius: 2px;
-            background: #d1d1d6;
-            outline: none;
-        }
+        .btn-page:active { background: #d1d1d6; }
+        .ios-slider { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #d1d1d6; outline: none; }
         .ios-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: #ffffff;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-            cursor: pointer;
+            -webkit-appearance: none; appearance: none; width: 26px; height: 26px;
+            border-radius: 50%; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.18); cursor: pointer;
         }
 
-        /* 切換動畫與基礎組件 */
-        .section {
-            display: none;
-            opacity: 0;
-        }
-        .section.active {
-            display: block;
-            opacity: 1;
-            animation: iosSlideUp 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-        @keyframes iosSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .section { display: none; opacity: 0; }
+        .section.active { display: block; opacity: 1; animation: iosSlideUp 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        @keyframes iosSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .app-card {
-            background: var(--ios-surface);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 24px;
-            box-shadow: none;
-            border: none;
-        }
-        .card-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            letter-spacing: -0.2px;
-        }
+        .app-card { background: var(--ios-surface); border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: none; border: none; }
+        .card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.2px; }
         .btn-action {
-            width: 100%;
-            padding: 14px 24px;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            color: #ffffff;
-            background-color: var(--brand-primary);
-            transition: var(--transition-ios);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            width: 100%; padding: 14px 24px; border-radius: 12px; font-size: 17px;
+            font-weight: 600; border: none; cursor: pointer; color: #ffffff;
+            background-color: var(--brand-primary); transition: var(--transition-ios);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .btn-action:active {
-            opacity: 0.7;
-            transform: scale(0.99);
-        }
-        .btn-secondary {
-            background-color: var(--ios-surface);
-            color: var(--brand-primary);
-        }
-        .setting-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 0.5px solid var(--border-light);
-        }
-        .setting-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        .setting-row > div:first-child {
-            flex: 1;
-            min-width: 0;
-        }
+        .btn-action:active { opacity: 0.7; transform: scale(0.99); }
+        .btn-secondary { background-color: var(--ios-surface); color: var(--brand-primary); }
         
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 51px;
-            height: 31px;
-            flex-shrink: 0;
-            margin-left: 16px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #e3e3e5;
-            border-radius: 31px;
-            transition: 0.25s;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 27px;
-            width: 27px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            border-radius: 50%;
-            transition: 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-        }
-        input:checked + .slider {
-            background-color: var(--status-success);
-        }
-        input:checked + .slider:before {
-            transform: translateX(20px);
-        }
+        .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid var(--border-light); }
+        .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .setting-row > div:first-child { flex: 1; min-width: 0; }
 
-        .input-number-wrapper {
-            display: flex;
-            align-items: center;
-            background: #eeeeee;
-            border-radius: 8px;
-            padding: 6px 12px;
-            flex-shrink: 0;
-            margin-left: 16px;
-        }
-        .input-number-wrapper input {
-            width: 50px;
-            border: none;
-            background: transparent;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 500;
-            outline: none;
-        }
+        .input-number-wrapper { display: flex; align-items: center; background: #eeeeee; border-radius: 8px; padding: 6px 12px; flex-shrink: 0; margin-left: 16px; }
+        .input-number-wrapper input { width: 50px; border: none; background: transparent; text-align: center; font-size: 16px; font-weight: 500; outline: none; }
 
         .option-container {
-            display: flex;
-            align-items: center;
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            background-color: var(--ios-sub-bg);
-            border: 0.5px solid var(--border-light);
-            cursor: pointer;
+            display: flex; align-items: center; padding: 14px 16px; margin-bottom: 10px;
+            border-radius: 10px; background-color: var(--ios-sub-bg); border: 0.5px solid var(--border-light); cursor: pointer;
         }
-        .option-container input[type="radio"] {
-            display: none;
-        }
+        .option-container input[type="radio"] { display: none; }
         .option-badge {
-            flex-shrink: 0;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 1px solid #c6c6c8;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-right: 12px;
+            flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+            border: 1px solid #c6c6c8; background: #ffffff; display: flex;
+            align-items: center; justify-content: center; font-size: 12px;
+            font-weight: 600; color: var(--text-secondary); margin-right: 12px;
         }
-        .option-text {
-            font-size: 15px;
-            color: var(--text-primary);
-            line-height: 1.4;
-        }
-        .option-container.selected {
-            border-color: var(--brand-primary);
-            background-color: #f2f8ff;
-        }
-        .option-container.selected .option-badge {
-            background-color: var(--brand-primary);
-            border-color: var(--brand-primary);
-            color: #ffffff;
-        }
-        .option-container.correct {
-            border-color: var(--status-success) !important;
-            background-color: var(--status-success-bg) !important;
-        }
-        .option-container.correct .option-badge {
-            background-color: var(--status-success) !important;
-            border-color: var(--status-success) !important;
-            color: #ffffff !important;
-        }
-        .option-container.wrong {
-            border-color: var(--status-error) !important;
-            background-color: var(--status-error-bg) !important;
-        }
-        .option-container.wrong .option-badge {
-            background-color: var(--status-error) !important;
-            border-color: var(--status-error) !important;
-            color: #ffffff !important;
-        }
+        .option-text { font-size: 15px; color: var(--text-primary); line-height: 1.4; }
+        .option-container.selected { border-color: var(--brand-primary); background-color: #f2f8ff; }
+        .option-container.selected .option-badge { background-color: var(--brand-primary); border-color: var(--brand-primary); color: #ffffff; }
+        .option-container.correct { border-color: var(--status-success) !important; background-color: var(--status-success-bg) !important; }
+        .option-container.correct .option-badge { background-color: var(--status-success) !important; border-color: var(--status-success) !important; color: #ffffff !important; }
+        .option-container.wrong { border-color: var(--status-error) !important; background-color: var(--status-error-bg) !important; }
+        .option-container.wrong .option-badge { background-color: var(--status-error) !important; border-color: var(--status-error) !important; color: #ffffff !important; }
 
-        .status-banner {
-            margin-top: 14px;
-            padding: 12px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            display: none;
-            align-items: center;
-            gap: 8px;
-        }
-        .status-banner.show {
-            display: flex;
-        }
-        .status-banner.correct {
-            background-color: var(--status-success-bg);
-            color: var(--status-success);
-        }
-        .status-banner.wrong {
-            background-color: var(--status-error-bg);
-            color: var(--status-error);
-        }
-        .status-banner.unanswered {
-            background-color: var(--status-warning-bg);
-            color: var(--status-warning);
-        }
+        .status-banner { margin-top: 14px; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; display: none; align-items: center; gap: 8px; }
+        .status-banner.show { display: flex; }
+        .status-banner.correct { background-color: var(--status-success-bg); color: var(--status-success); }
+        .status-banner.wrong { background-color: var(--status-error-bg); color: var(--status-error); }
+        .status-banner.unanswered { background-color: var(--status-warning-bg); color: var(--status-warning); }
 
-        .skeleton-card {
-            padding: 16px;
-            background: var(--ios-surface);
-            border-radius: 12px;
-            margin-bottom: 24px;
-        }
-        .skeleton-line {
-            background: linear-gradient(90deg, #e5e5ea 25%, #d1d1d6 50%, #e5e5ea 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite linear;
-            border-radius: 4px;
-        }
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
+        .skeleton-card { padding: 16px; background: var(--ios-surface); border-radius: 12px; margin-bottom: 24px; }
+        .skeleton-line { background: linear-gradient(90deg, #e5e5ea 25%, #d1d1d6 50%, #e5e5ea 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-        .score-circle-view {
-            text-align: center;
-            padding: 24px 0;
-        }
-        .score-num {
-            font-size: 72px;
-            font-weight: 700;
-            color: var(--brand-primary);
-            line-height: 1;
-            letter-spacing: -2px;
-        }
-        .score-lbl {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 6px;
-        }
+        .score-circle-view { text-align: center; padding: 24px 0; }
+        .score-num { font-size: 72px; font-weight: 700; color: var(--brand-primary); line-height: 1; letter-spacing: -2px; }
+        .score-lbl { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; }
 
-        .svg-icon {
-            width: 20px;
-            height: 20px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2.2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
+        .svg-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
-        .app-footer {
-            margin-top: 48px;
-            padding: 24px 0 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-        .footer-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 500;
-            color: var(--status-success);
-            font-size: 11px;
-        }
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            background-color: var(--status-success);
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .app-footer { margin-top: 48px; padding: 24px 0 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); text-align: center; }
+        .footer-status { display: flex; align-items: center; gap: 6px; font-weight: 500; color: var(--status-success); font-size: 11px; }
+        .status-dot { width: 7px; height: 7px; background-color: var(--status-success); border-radius: 50%; display: inline-block; }
     </style>
 </head>
 <body>
@@ -679,9 +366,7 @@
         <div id="tab-content-reading" class="tab-content active">
             <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 12px; letter-spacing: -0.1px;">我的智慧書架</div>
             
-            <!-- 網格書架開始 -->
             <div class="book-grid">
-                
                 <!-- 書籍卡片 1 -->
                 <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '第一科：人工智慧基礎概論')">
                     <div class="book-cover-wrapper">
@@ -705,9 +390,7 @@
                         <div class="book-status-text book-status-meta" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf">狀態讀取中...</div>
                     </div>
                 </div>
-                
             </div>
-            <!-- 網格書架結束 -->
         </div>
 
         <!-- Tab 2: 測驗功能區 -->
@@ -723,8 +406,10 @@
 
             <!-- 階段二：考卷範圍與題數設定 -->
             <div id="stage-config" class="section">
-                <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px;">題庫清單</div>
-                <div class="app-card" id="bank-list-container" style="padding-top: 4px; padding-bottom: 4px;"></div>
+                <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px;">選擇測驗題庫</div>
+                
+                <!-- 修改為書架樣式 -->
+                <div class="book-grid" id="bank-list-container" style="margin-bottom: 16px;"></div>
 
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 16px 4px 8px;">考卷設定</div>
                 <div class="app-card" style="padding-top: 4px; padding-bottom: 4px;">
@@ -763,7 +448,7 @@
 
         <footer class="app-footer">
             <div class="footer-status"><span class="status-dot"></span><span>所有服務運行正常</span></div>
-            <div class="footer-meta"><span>版本 v1.4.0 (6792@gcloud.csu.edu.tw)</span></div>
+            <div class="footer-meta"><span>版本 v1.4.1 (書籍化題庫版)</span></div>
         </footer>
     </main>
 
@@ -834,7 +519,6 @@
     let isRenderingPage = false;
     let currentZoomScale = 1.0;
 
-    // ==================== 📱 手機左右滑動翻頁 ====================
     let touchStartX = 0; let touchEndX = 0;
     let touchStartY = 0; let touchEndY = 0;
 
@@ -853,7 +537,7 @@
     }
 
     function handleSwipeGesture() {
-        if (currentZoomScale > 1.0) return; // 縮放狀態下關閉滑動翻頁以防衝突
+        if (currentZoomScale > 1.0) return; 
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
         if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -861,7 +545,6 @@
         }
     }
 
-    // ==================== 🔍 縮放控制邏輯 ====================
     function adjustZoom(amount) {
         let targetZoom = currentZoomScale + amount;
         if (targetZoom >= 0.75 && targetZoom <= 2.5) {
@@ -871,7 +554,6 @@
         }
     }
 
-    // ==================== 🔄 全局 Tab 頁面切換控制 ====================
     function switchGlobalTab(tabId) {
         activeGlobalTab = tabId;
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
@@ -908,7 +590,6 @@
         if (activeQuizSection === 'stage-result') document.getElementById('action-bar-result').style.display = 'block';
     }
 
-    // ==================== 📖 PDF 閱讀核心邏輯與進度監聽 ====================
     async function openEbook(pdfUrl, bookTitle) {
         currentPdfUrl = pdfUrl; 
         const readerWin = document.getElementById('ebook-reader-window');
@@ -1050,7 +731,6 @@
         syncAllReadingProgress();
     }
 
-    // ==================== 📊 動態讀取與同步閱讀進度百分比 ====================
     function syncAllReadingProgress() {
         document.querySelectorAll('.book-status-text').forEach(el => {
             const pdfUrl = el.getAttribute('data-pdfurl');
@@ -1070,12 +750,11 @@
         });
     }
 
-    // ==================== 🛠️ 異步 PDF 封面生成與載入進度 ====================
     async function makePdfThumbnail(pdfUrl, imgElementId, progressId) {
         try {
             if (typeof pdfjsLib === 'undefined') return;
             const progressOverlay = document.getElementById(progressId);
-            if (progressOverlay) progressOverlay.style.display = 'flex'; // 用 flex 置中
+            if (progressOverlay) progressOverlay.style.display = 'flex'; 
 
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
             
@@ -1115,12 +794,10 @@
         }
     }
 
-    // ==================== 📝 模擬測驗核心邏輯 ====================
     async function initSystem() {
         initTouchGestures(); 
         syncAllReadingProgress();
 
-        // 啟動書本縮圖與下載監聽
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', 'thumb-book1', 'thumb-prog-1');
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', 'thumb-book2', 'thumb-prog-2');
 
@@ -1165,6 +842,7 @@
         }
     }
 
+    // ─── 修改：將原本的單調列表改為書架卡片 UI ───
     function renderConfigUI() {
         const container = document.getElementById('bank-list-container');
         let totalQuestionsAvailable = 0;
@@ -1173,16 +851,63 @@
         for (const [displayName, questions] of Object.entries(loadedBanks)) {
             const count = questions.length; 
             totalQuestionsAvailable += count;
-            const div = document.createElement('div'); 
-            div.className = 'setting-row';
-            div.innerHTML = `<div><div style="font-size: 16px; font-weight: 500;">${displayName}</div><div style="font-size: 13px; color: var(--text-secondary); margin-top: 1px;">內含 ${count} 項題目</div></div><label class="toggle-switch"><input type="checkbox" class="bank-checkbox" value="${displayName}" checked><span class="slider"></span></label>`;
-            container.appendChild(div);
+            
+            const card = document.createElement('div');
+            // 預設加上 selected 表示已勾選[cite: 2]
+            card.className = 'book-card quiz-bank-card selected'; 
+            card.onclick = function() {
+                this.classList.toggle('selected');
+                const cb = this.querySelector('.bank-checkbox');
+                cb.checked = !cb.checked;
+                updateQuestionCountLimit(); // 點擊時同步更新總題數
+            };
+
+            // 使用漸層色作為題庫的預設封面，並加上勾勾徽章
+            card.innerHTML = `
+                <div class="book-cover-wrapper">
+                    <div class="check-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); width:100%; height:100%; display:flex; align-items:center; justify-content:center; color: white; font-size: 24px; font-weight: bold; letter-spacing: 2px;">
+                        QUIZ
+                    </div>
+                </div>
+                <div class="book-info">
+                    <div class="book-title">${displayName}</div>
+                    <div class="book-status-meta">內含 ${count} 題</div>
+                </div>
+                <input type="checkbox" class="bank-checkbox" value="${displayName}" checked style="display:none;">
+            `;
+            container.appendChild(card);
         }
         
         const inputEl = document.getElementById('question-count');
         inputEl.max = totalQuestionsAvailable; 
         inputEl.value = totalQuestionsAvailable < 10 ? totalQuestionsAvailable : 10;
     }
+
+    // 新增：動態更新「隨機抽取數量」上限防呆邏輯
+    function updateQuestionCountLimit() {
+        const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
+        let currentTotal = 0;
+        checkboxes.forEach(cb => {
+            currentTotal += loadedBanks[cb.value].length;
+        });
+        
+        const inputEl = document.getElementById('question-count');
+        inputEl.max = currentTotal;
+        if (parseInt(inputEl.value) > currentTotal) {
+            inputEl.value = currentTotal;
+        }
+        if (currentTotal === 0) {
+            inputEl.value = 0;
+        } else if (parseInt(inputEl.value) === 0 && currentTotal > 0) {
+            inputEl.value = Math.min(10, currentTotal);
+        }
+    }
+    // ───────────────────────────────────────────
 
     function generateQuiz() {
         const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
@@ -1267,7 +992,6 @@
         showSection('stage-result');
     }
 
-    // ==================== 🛠️ PWA 支援機制 ====================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js').then(reg => {
