@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>測驗系統</title>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --surface-main: #ffffff;
+            --surface-sub: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --brand-primary: #4f46e5;
+            --brand-hover: #4338ca;
+            --brand-light: #e0e7ff;
+            --status-success: #10b981;
+            --status-success-bg: #ecfdf5;
+            --status-error: #ef4444;
+            --status-error-bg: #fef2f2;
+            --status-warning: #f59e0b;
+            --status-warning-bg: #fffbeb;
+            --border-light: #e2e8f0;
+            --border-focus: #cbd5e1;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            letter-spacing: -0.01em;
+        }
+
+        /* 磨砂玻璃頂部列 */
+        header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            border-bottom: 1px solid var(--border-light);
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            padding-bottom: calc(120px + env(safe-area-inset-bottom));
+            scroll-behavior: smooth;
+        }
+
+        /* 磨砂玻璃底部控制列 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 16px 24px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            border-top: 1px solid var(--border-light);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+            z-index: 100;
+            display: none;
+        }
+
+        .section { display: none; opacity: 0; }
+        .section.active { display: block; opacity: 1; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 產品級卡片設計 */
+        .app-card {
+            background: var(--surface-main);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-smooth);
+        }
+        .app-card:hover { box-shadow: var(--shadow-md); }
+
+        .card-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .card-desc { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; }
+
+        /* 高階互動按鈕 */
+        .btn-action {
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            color: var(--surface-main);
+            background-color: var(--brand-primary);
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.15);
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-action:hover { background-color: var(--brand-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
+        .btn-action:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(79, 70, 229, 0.15); }
+        
+        .btn-secondary {
+            background-color: var(--surface-main);
+            color: var(--text-primary);
+            border: 1px solid var(--border-focus);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-secondary:hover { background-color: var(--bg-main); border-color: var(--text-secondary); box-shadow: var(--shadow-sm); }
+
+        /* 精緻型自訂 Switch 控制項 */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--surface-sub);
+        }
+        .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-light);
+            border-radius: 24px;
+            transition: var(--transition-smooth);
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-sm);
+        }
+        input:checked + .slider { background-color: var(--brand-primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* 數字輸入框優化 */
+        .input-number-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--surface-sub);
+            border-radius: 6px;
+            padding: 4px;
+            border: 1px solid var(--border-light);
+        }
+        .input-number-wrapper input {
+            width: 64px;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        /* 產品級測驗選項設計 */
+        .option-container {
+            display: flex;
+            align-items: flex-start;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            background-color: var(--surface-main);
+            border: 1px solid var(--border-light);
+            transition: var(--transition-smooth);
+            cursor: pointer;
+        }
+        .option-container:hover {
+            border-color: var(--text-muted);
+            background-color: var(--bg-main);
+        }
+        .option-container input[type="radio"] { display: none; }
+        
+        .option-badge {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--border-focus);
+            background: var(--bg-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-right: 14px;
+            transition: var(--transition-smooth);
+        }
+        .option-text { font-size: 0.95rem; color: var(--text-primary); line-height: 1.5; }
+
+        /* 選項作答與評估狀態 */
+        .option-container.selected {
+            border-color: var(--brand-primary);
+            background-color: #f5f3ff;
+        }
+        .option-container.selected .option-badge {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+            color: var(--surface-main);
+        }
+
+        .option-container.correct {
+            border-color: var(--status-success) !important;
+            background-color: var(--status-success-bg) !important;
+        }
+        .option-container.correct .option-badge {
+            background-color: var(--status-success) !important;
+            border-color: var(--status-success) !important;
+            color: var(--surface-main) !important;
+        }
+
+        .option-container.wrong {
+            border-color: var(--status-error) !important;
+            background-color: var(--status-error-bg) !important;
+        }
+        .option-container.wrong .option-badge {
+            background-color: var(--status-error) !important;
+            border-color: var(--status-error) !important;
+            color: var(--surface-main) !important;
+        }
+
+        /* 系統級整合回饋區塊 */
+        .status-banner {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-banner.show { display: flex; animation: fadeIn 0.2s ease forwards; }
+        .status-banner.correct { background-color: var(--status-success-bg); color: var(--status-success); }
+        .status-banner.wrong { background-color: var(--status-error-bg); color: var(--status-error); }
+        .status-banner.unanswered { background-color: var(--status-warning-bg); color: var(--status-warning); }
+
+        /* 骨架屏載入動畫 (Skeleton Screen) */
+        .skeleton-card { padding: 24px; background: var(--surface-main); border-radius: 12px; border: 1px solid var(--border-light); margin-bottom: 20px;}
+        .skeleton-line { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        /* 分數資訊圖表風格 */
+        .score-circle-view {
+            text-align: center;
+            padding: 32px 0;
+        }
+        .score-num {
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: var(--brand-primary);
+            line-height: 1;
+            font-family: ui-sans-serif, system-ui, sans-serif;
+            letter-spacing: -0.03em;
+        }
+        .score-lbl { font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 8px;}
+
+        /* 精緻向量型 Icon 元件 */
+        .svg-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* SaaS 級整合應用程式頁尾風格 */
+        .app-footer {
+            margin-top: 64px;
+            padding: 32px 0 16px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .footer-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: var(--status-success);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--status-success);
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .footer-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .footer-split { color: var(--border-light); }
+    </style>
+</head>
+<body>
+
+    <header>測驗系統</header>
+
+    <main id="main-content">
+        <div id="stage-loading" class="section active">
+            <div class="skeleton-card">
+                <div class="skeleton-line" style="width: 40%; height: 20px; margin-bottom: 12px;"></div>
+                <div class="skeleton-line" style="width: 70%; height: 14px; margin-bottom: 32px;"></div>
+                <div class="skeleton-line" style="width: 100%; height: 48px; margin-bottom: 16px;"></div>
+                <div class="skeleton-line" style="width: 100%; height: 48px; margin-bottom: 16px;"></div>
+                <div class="skeleton-line" style="width: 100%; height: 48px;"></div>
+            </div>
+            <div class="skeleton-card">
+                <div class="skeleton-line" style="width: 30%; height: 20px; margin-bottom: 16px;"></div>
+                <div class="skeleton-line" style="width: 100%; height: 40px;"></div>
+            </div>
+        </div>
+
+        <div id="stage-config" class="section">
+            <div class="app-card">
+                <div class="card-title">測驗範圍設定</div>
+                <div class="card-desc">請選擇測驗題庫。</div>
+                <div id="bank-list-container"></div>
+            </div>
+            
+            <div class="app-card">
+                <div class="setting-row" style="padding: 0; border: none;">
+                    <div>
+                        <div class="card-title">隨機抽取題目數量</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">自總題庫隨機抽取動態生成考卷。</div>
+                    </div>
+                    <div class="input-number-wrapper">
+                        <input type="number" id="question-count" value="10" min="1" inputmode="numeric">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stage-quiz" class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 4px;">
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em;">EXAMINATION IN PROGRESS</span>
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);" id="quiz-header"></span>
+            </div>
+            <div id="quiz-container"></div>
+        </div>
+
+        <div id="stage-result" class="section">
+            <div class="app-card" style="border-top: 4px solid var(--brand-primary);">
+                <div class="score-circle-view">
+                    <div class="score-num" id="result-score">0</div>
+                    <div class="score-lbl">測驗得分</div>
+                </div>
+                <div style="text-align: center; font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;" id="result-details"></div>
+            </div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin: 32px 4px 16px;">答題複查與解析</div>
+        </div>
+
+        <footer class="app-footer">
+            <div class="footer-status">
+                <span class="status-dot"></span>
+                <span>beta</span>
+            </div>
+            <div class="footer-meta">
+                <span>系統版本 v1.0 beta</span>
+            </div>
+            <div style="color: var(--text-secondary); font-weight: 500; margin-top: 2px;">
+                測試系統 6792@gcloud.csu.edu.tw
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+                &copy; 2026 beta.
+            </div>
+        </footer>
+    </main>
+
+    <div class="bottom-nav" id="action-bar-config">
+        <button class="btn-action" onclick="generateQuiz()">
+            <span>開始測驗</span>
+            <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+    </div>
+    
+    <div class="bottom-nav" id="action-bar-quiz">
+        <button class="btn-action" onclick="submitQuiz()">
+            <span>提交試卷並評分</span>
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </button>
+    </div>
+
+    <div class="bottom-nav" id="action-bar-result">
+        <button class="btn-action btn-secondary" onclick="location.reload()">
+            <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            <span>開始新測驗</span>
+        </button>
+    </div>
+
+<script>
+    let loadedBanks = {}; 
+    let currentQuiz = []; 
+
+    // 管理全域場景與磨砂列切換
+    function showSection(stageId) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
+        
+        document.getElementById(stageId).classList.add('active');
+        
+        if (stageId === 'stage-config') document.getElementById('action-bar-config').style.display = 'block';
+        if (stageId === 'stage-quiz') document.getElementById('action-bar-quiz').style.display = 'block';
+        if (stageId === 'stage-result') {
+            document.getElementById('action-bar-result').style.display = 'block';
+            document.getElementById('stage-quiz').classList.add('active'); // 留在考卷供查閱
+        }
+        
+        document.getElementById('main-content').scrollTo(0, 0);
+    }
+
+    // 初始化：非同步解析 MD 清單
+    async function initSystem() {
+        try {
+            const mdResponse = await fetch('data/bank_list.md');
+            if (!mdResponse.ok) throw new Error("Manifest (bank_list.md) response failed.");
+            
+            const mdText = await mdResponse.text();
+            const lines = mdText.split('\n');
+            const bankFilesToLoad = [];
+            
+            lines.forEach(line => {
+                let cleanLine = line.trim().replace(/^[\-\*\+]\s+/, '');
+                if (cleanLine && !cleanLine.startsWith('#') && cleanLine.endsWith('.json')) {
+                    bankFilesToLoad.push(cleanLine);
+                }
+            });
+
+            if (bankFilesToLoad.length === 0) throw new Error("No payload source specified.");
+            await loadAllBanks(bankFilesToLoad);
+
+        } catch (error) {
+            console.error(error);
+            const contentArea = document.getElementById('stage-loading');
+            contentArea.innerHTML = `
+                <div class="app-card" style="border-top: 4px solid var(--status-error); text-align: center; padding: 40px 20px;">
+                    <div style="color: var(--status-error); font-weight: 600; margin-bottom: 8px;">系統配置載入中斷</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">${error.message}</div>
+                </div>
+            `;
+        }
+    }
+
+    // 非同步載入所有模組庫 JSON
+    async function loadAllBanks(bankFiles) {
+        let successCount = 0;
+        for (const filename of bankFiles) {
+            try {
+                const response = await fetch(`data/${filename}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const displayName = filename.replace('.json', '');
+                    loadedBanks[displayName] = data;
+                    successCount++;
+                }
+            } catch (e) { console.error(`Failed to load: ${filename}`); }
+        }
+
+        if (successCount > 0) {
+            renderConfigUI();
+            // 延遲一點點時間讓動畫流暢切換
+            setTimeout(() => showSection('stage-config'), 400);
+        } else {
+            const contentArea = document.getElementById('stage-loading');
+            contentArea.innerHTML = `
+                <div class="app-card" style="border-top: 4px solid var(--status-error); text-align: center; padding: 40px 20px;">
+                    <div style="color: var(--status-error); font-weight: 600;">資料庫同步異常，請檢查遠端配置檔案。</div>
+                </div>
+            `;
+        }
+    }
+
+    // 建立高階 Switch 控制設定面板
+    function renderConfigUI() {
+        const container = document.getElementById('bank-list-container');
+        let totalQuestionsAvailable = 0;
+
+        for (const [displayName, questions] of Object.entries(loadedBanks)) {
+            const count = questions.length;
+            totalQuestionsAvailable += count;
+
+            const div = document.createElement('div');
+            div.className = 'setting-row';
+            div.innerHTML = `
+                <div>
+                    <div style="font-size: 0.95rem; font-weight: 500; color: var(--text-primary);">${displayName}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">內含 ${count} 項題目</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" class="bank-checkbox" value="${displayName}" checked>
+                    <span class="slider"></span>
+                </label>
+            `;
+            container.appendChild(div);
+        }
+
+        const inputEl = document.getElementById('question-count');
+        inputEl.max = totalQuestionsAvailable;
+        inputEl.value = totalQuestionsAvailable < 10 ? totalQuestionsAvailable : 10;
+    }
+
+    // 隨機演算法：動態生成考卷
+    function generateQuiz() {
+        const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
+        let questionPool = [];
+
+        checkboxes.forEach(cb => {
+            const name = cb.value;
+            const qWithSource = loadedBanks[name].map(q => ({...q, sourceBank: name}));
+            questionPool = questionPool.concat(qWithSource);
+        });
+
+        if (questionPool.length === 0) {
+            alert("請至少啟動一項測驗題目範圍設定。");
+            return;
+        }
+
+        let count = parseInt(document.getElementById('question-count').value);
+        if (isNaN(count) || count < 1) count = 1;
+        count = Math.min(count, questionPool.length);
+        
+        let shuffled = [...questionPool].sort(() => Math.random() - 0.5);
+        currentQuiz = shuffled.slice(0, count);
+        
+        renderQuiz();
+        showSection('stage-quiz');
+    }
+
+    // 行動端優化：選項卡片點擊觸發邏輯
+    function selectOption(qIndex, key) {
+        document.querySelectorAll(`.opt-group-${qIndex}`).forEach(el => {
+            el.classList.remove('selected');
+        });
+        const selectedLabel = document.getElementById(`label-${qIndex}-${key}`);
+        selectedLabel.classList.add('selected');
+        document.getElementById(`radio-${qIndex}-${key}`).checked = true;
+    }
+
+    // 渲染高產品精緻度考卷內容
+    function renderQuiz() {
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = '';
+        document.getElementById('quiz-header').innerText = `ITEMS: ${currentQuiz.length}`;
+
+        currentQuiz.forEach((q, index) => {
+            const card = document.createElement('div');
+            card.className = 'app-card';
+            
+            let optionsHtml = '';
+            if (q.options && typeof q.options === 'object') {
+                for (const [key, value] of Object.entries(q.options)) {
+                    optionsHtml += `
+                        <div class="option-container opt-group-${index}" id="label-${index}-${key}" onclick="selectOption(${index}, '${key}')">
+                            <input type="radio" id="radio-${index}-${key}" name="q${index}" value="${key}">
+                            <div class="option-badge">${key}</div>
+                            <div class="option-text">${value}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            const catText = q.category || q.sourceBank;
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; border-bottom: 1px solid var(--surface-sub); padding-bottom: 8px;">
+                    <span>${catText}</span>
+                    <span style="color:var(--text-muted);">REF: ${q.id || 'N/A'}</span>
+                </div>
+                <div style="font-size: 1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-primary); line-height: 1.5;">
+                    <span style="color: var(--brand-primary); font-weight: 700; margin-right: 6px;">${index + 1}.</span>${q.question}
+                </div>
+                <div>${optionsHtml}</div>
+                <div id="feedback-${index}" class="status-banner"></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // 送出試卷與商業級圖表與資料重構狀態
+    function submitQuiz() {
+        let score = 0;
+        
+        currentQuiz.forEach((q, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const feedback = document.getElementById(`feedback-${index}`);
+            const ansKey = q.answer; 
+            
+            const correctLabel = document.getElementById(`label-${index}-${ansKey}`);
+            if (correctLabel) correctLabel.classList.add('correct');
+
+            feedback.className = 'status-banner show';
+
+            // SVG 勾選與驚嘆號圖示動態產生
+            const svgCorrect = `<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            const svgWrong = `<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+            const svgWarn = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+
+            if (selected) {
+                if (selected.value === ansKey) {
+                    score++;
+                    feedback.innerHTML = `${svgCorrect} <span>測驗狀態：答題正確</span>`;
+                    feedback.classList.add('correct');
+                } else {
+                    feedback.innerHTML = `${svgWrong} <span>測驗狀態：作答錯誤，正確答案請參考綠色欄位。</span>`;
+                    feedback.classList.add('wrong');
+                    document.getElementById(`label-${index}-${selected.value}`).classList.add('wrong');
+                }
+            } else {
+                feedback.innerHTML = `${svgWarn} <span>測驗狀態：此題未作答，正確答案請參考綠色欄位。</span>`;
+                feedback.classList.add('unanswered');
+            }
+            
+            // 阻斷後續點擊行為
+            document.querySelectorAll(`.opt-group-${index}`).forEach(el => el.onclick = null);
+        });
+
+        const finalScore = Math.round((score / currentQuiz.length) * 100);
+        
+        document.getElementById('result-score').innerText = finalScore;
+        document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length} (經系統驗證)`;
+        
+        showSection('stage-result');
+    }
+
+    window.onload = initSystem;
+</script>
+</body>
+</html>
