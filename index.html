@@ -678,7 +678,7 @@
 
         <footer class="app-footer">
             <div class="footer-status"><span class="status-dot"></span><span>所有服務運行正常</span></div>
-            <div class="footer-meta"><span>版本 v1.3.0 (Smart Progress)</span></div>
+            <div class="footer-meta"><span>版本 v1.3.1 (Smart Progress Patch)</span></div>
         </footer>
     </main>
 
@@ -842,12 +842,18 @@
                 if (progressData.total > 0) {
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
                     progressBar.style.width = percent + '%';
-                    titleEl.innerText = `下載資料中 ${percent}%`;
+                    
+                    // 修正：如果到 100% 就直接改回原有書名不留痕跡，否則顯示下載進度
+                    if (percent >= 100) {
+                        titleEl.innerText = bookTitle;
+                    } else {
+                        titleEl.innerText = `下載資料中 ${percent}%`;
+                    }
                 }
             };
 
             currentPdfDoc = await loadingTask.promise;
-            titleEl.innerText = bookTitle; 
+            titleEl.innerText = bookTitle; // 確保完成時一定是乾淨書名
             
             setTimeout(() => { progressBar.style.opacity = '0'; }, 300);
             
@@ -979,7 +985,7 @@
         });
     }
 
-    // ==================== 🖼️ 異步 PDF 封面生成與載入進度 ====================
+    // ==================== 🛠️ 異步 PDF 封面生成與載入進度 ====================
     async function makePdfThumbnail(pdfUrl, imgElementId, progressId) {
         try {
             if (typeof pdfjsLib === 'undefined') return;
@@ -991,7 +997,13 @@
             loadingTask.onProgress = function(progressData) {
                 if (progressData.total > 0 && progressOverlay) {
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
-                    progressOverlay.innerText = percent + "%";
+                    
+                    // 修正：當百分比到 100% 時直接隱藏此下載覆蓋圖層，避免文字殘留
+                    if (percent >= 100) {
+                        progressOverlay.style.display = 'none';
+                    } else {
+                        progressOverlay.innerText = percent + "%";
+                    }
                 }
             };
 
@@ -1019,7 +1031,7 @@
         }
     }
 
-    // ==================== 📝 模擬測驗核心邏輯 (與原版完全一致) ====================
+    // ==================== 📝 模擬測驗核心邏輯 ====================
     async function initSystem() {
         initTouchGestures(); 
         syncAllReadingProgress();
