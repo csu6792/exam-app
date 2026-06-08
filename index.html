@@ -150,6 +150,7 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.06);
             border-radius: 6px;
             max-width: 100%;
+            display: block;
         }
         .reader-footer {
             background: rgba(255, 255, 255, 0.88);
@@ -573,13 +574,12 @@
     </div>
 
 <script>
-    // 指定 PDF.js 的 Worker 執行緒路徑
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     let loadedBanks = {}; 
     let currentQuiz = []; 
-    let activeGlobalTab = 'reading'; // 當前全局 Tab ('reading' 或 'quiz')
-    let activeQuizSection = 'stage-loading'; // 當前測驗區小進度
+    let activeGlobalTab = 'reading'; 
+    let activeQuizSection = 'stage-loading'; 
 
     let currentPdfDoc = null;
     let currentPdfPage = 1;
@@ -589,12 +589,9 @@
     // ==================== 🔄 全局 Tab Bar 切換邏輯 ====================
     function switchGlobalTab(tabId) {
         activeGlobalTab = tabId;
-        
-        // 更新 Tab 狀態樣式
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
         document.getElementById(`tab-btn-${tabId}`).classList.add('active');
         
-        // 切換主要視窗內容
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.getElementById(`tab-content-${tabId}`).classList.add('active');
         
@@ -605,16 +602,13 @@
             navTitle.innerText = "教科書閱讀";
         } else {
             navTitle.innerText = "專業測驗系統";
-            restoreQuizActionBar(); // 還原測驗分組對應的懸浮按鈕列
+            restoreQuizActionBar(); 
         }
         document.getElementById('main-content').scrollTo(0, 0);
     }
 
-    // 覆蓋並整合原始測驗的 showSection
     function showSection(stageId) {
         activeQuizSection = stageId;
-        
-        // 如果現在是在測驗頁，先清空按鈕
         if (activeGlobalTab === 'quiz') {
             document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         }
@@ -632,14 +626,13 @@
         document.getElementById('main-content').scrollTo(0, 0);
     }
 
-    // 依據測驗階段精準顯現對應懸浮按鈕
     function restoreQuizActionBar() {
         if (activeQuizSection === 'stage-config') document.getElementById('action-bar-config').style.display = 'block';
         if (activeQuizSection === 'stage-quiz') document.getElementById('action-bar-quiz').style.display = 'block';
         if (activeQuizSection === 'stage-result') document.getElementById('action-bar-result').style.display = 'block';
     }
 
-    // ==================== 📖 PDF 電子書閱讀與自動首頁封面縮圖 ====================
+    // ==================== 📖 PDF 高清閱讀與自動首頁封面縮圖 ====================
     async function openEbook(pdfUrl, bookTitle) {
         currentPdfUrl = pdfUrl; 
         const readerWin = document.getElementById('ebook-reader-window');
@@ -653,13 +646,10 @@
         try {
             currentPdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
             
-            // 讀取本機緩存的歷史頁碼進度
             const savedPage = localStorage.getItem('ebook_progress_' + pdfUrl);
             if (savedPage) {
                 currentPdfPage = parseInt(savedPage);
-                if (currentPdfPage > currentPdfDoc.numPages || currentPdfPage < 1) {
-                    currentPdfPage = 1;
-                }
+                if (currentPdfPage > currentPdfDoc.numPages || currentPdfPage < 1) currentPdfPage = 1;
             } else {
                 currentPdfPage = 1;
             }
@@ -675,55 +665,54 @@
         }
     }
 
+    // ⭐ 核心高清優化渲染函數 (Retina & Dynamic Resolution Fix)
     async function renderBookPage(pageNumber) {
-    if (!currentPdfDoc || isRenderingPage) return;
-    isRenderingPage = true;
+        if (!currentPdfDoc || isRenderingPage) return;
+        isRenderingPage = true;
 
-    try {
-        const page = await currentPdfDoc.getPage(pageNumber);
-        const canvas = document.getElementById('pdf-canvas');
-        const ctx = canvas.getContext('2d');
-        const viewportArea = document.getElementById('viewport-area');
+        try {
+            const page = await currentPdfDoc.getPage(pageNumber);
+            const canvas = document.getElementById('pdf-canvas');
+            const ctx = canvas.getContext('2d');
+            const viewportArea = document.getElementById('viewport-area');
 
-        // 1. 計算 RWD 的基礎縮放比例
-        const containerWidth = viewportArea.clientWidth - 24; 
-        const unscaledViewport = page.getViewport({ scale: 1 });
-        const dynamicScale = containerWidth / unscaledViewport.width;
-        const compiledViewport = page.getViewport({ scale: dynamicScale });
+            // 1. 計算適合當前螢幕容器寬度的基礎 RWD 縮放比
+            const containerWidth = viewportArea.clientWidth - 24; 
+            const unscaledViewport = page.getViewport({ scale: 1 });
+            const dynamicScale = containerWidth / unscaledViewport.width;
+            const compiledViewport = page.getViewport({ scale: dynamicScale });
 
-        // 2. 核心高清優化：獲取螢幕的像素密度（通常手機為 2 或 3）
-        const outputScale = window.devicePixelRatio || 1;
+            // 2. 高清優化：獲取當前螢幕的實體像素比（例如 iPhone Retina 螢幕為 2 或 3）
+            const pixelRatio = window.devicePixelRatio || 1;
 
-        // 3. 讓 Canvas 的內在畫布解析度放大（乘以 outputScale）
-        canvas.width = Math.floor(compiledViewport.width * outputScale);
-        canvas.height = Math.floor(compiledViewport.height * outputScale);
+            // 3. 核心：讓 Canvas 的內部畫布解析度放大乘上像素比
+            canvas.width = Math.floor(compiledViewport.width * pixelRatio);
+            canvas.height = Math.floor(compiledViewport.height * pixelRatio);
 
-        // 4. 透過 CSS 讓 Canvas 顯示大小保持原樣
-        canvas.style.width = Math.floor(compiledViewport.width) + "px";
-        canvas.style.height = Math.floor(compiledViewport.height) + "px";
+            // 4. 保持 Canvas 在網頁上的顯示尺寸（CSS 寬高）不變，使像素更緊密
+            canvas.style.width = Math.floor(compiledViewport.width) + "px";
+            canvas.style.height = Math.floor(compiledViewport.height) + "px";
 
-        // 5. 告訴 PDF.js 繪製時需要放大對應的倍數
-        const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+            // 5. 透過 Canvas 轉換矩陣，縮放 ctx 繪製內容（防止 PDF 畫面縮在左上角）
+            ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
-        const renderContext = {
-            canvasContext: ctx,
-            viewport: compiledViewport,
-            transform: transform // 帶入高清轉換矩陣
-        };
-        await page.render(renderContext).promise;
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: compiledViewport
+            };
+            await page.render(renderContext).promise;
 
-        document.getElementById('reader-page-indicator').innerText = `${pageNumber} / ${currentPdfDoc.numPages}`;
-        document.getElementById('reader-slider').value = pageNumber;
+            document.getElementById('reader-page-indicator').innerText = `${pageNumber} / ${currentPdfDoc.numPages}`;
+            document.getElementById('reader-slider').value = pageNumber;
 
-        // 儲存進度
-        localStorage.setItem('ebook_progress_' + currentPdfUrl, pageNumber);
+            localStorage.setItem('ebook_progress_' + currentPdfUrl, pageNumber);
 
-    } catch (err) {
-        console.error(err);
-    } finally {
-        isRenderingPage = false;
+        } catch (err) {
+            console.error(err);
+        } finally {
+            isRenderingPage = false;
+        }
     }
-}
 
     function movePage(direction) {
         if (!currentPdfDoc) return;
@@ -747,7 +736,7 @@
         currentPdfDoc = null;
     }
 
-    // 動態異步抓取 PDF 第一頁作為首頁的小預覽縮圖
+    // 微調優化：提高首頁預覽縮圖的解碼像素 (由 0.3 提升至 0.8)
     async function makePdfThumbnail(pdfUrl, imgElementId) {
         try {
             if (typeof pdfjsLib === 'undefined') return;
@@ -756,8 +745,7 @@
             const pdf = await loadingTask.promise;
             const page = await pdf.getPage(1);
             
-            // 使用小比例 (0.3) 快速解碼封面，節省記憶體開銷
-            const viewport = page.getViewport({ scale: 0.3 });
+            const viewport = page.getViewport({ scale: 0.8 }); // 提升原生細節
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.height = viewport.height;
@@ -775,7 +763,6 @@
             }
         } catch (error) {
             console.warn("無法取得 PDF 首頁預覽圖 (原因可能為本機 file:// 的 CORS 限制):", error);
-            // 當本機開啟或讀取失敗時，自動降級為 Apple Books 風格的灰色備用書本 ICON
             const imgElement = document.getElementById(imgElementId);
             if (imgElement) {
                 imgElement.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'></path><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'></path></svg>";
@@ -785,7 +772,6 @@
 
     // ==================== 📝 測驗系統核心業務邏輯 ====================
     async function initSystem() {
-        // 同步加載電子書的封面預覽縮圖
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', 'thumb-book1');
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', 'thumb-book2');
 
@@ -984,10 +970,8 @@
         });
 
         const finalScore = Math.round((score / currentQuiz.length) * 100);
-        
         document.getElementById('result-score').innerText = finalScore;
         document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length}`;
-        
         showSection('stage-result');
     }
 
