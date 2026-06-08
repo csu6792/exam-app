@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>專業測驗與閱讀系統</title>
+    <!-- 引入 PWA 清單與核心 PDF.js -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
@@ -74,6 +75,99 @@
         .tab-content.active {
             display: block;
         }
+
+        /* --- 🛒 電子書城網格佈局 ─── */
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+            padding: 8px 4px;
+        }
+
+        .book-card {
+            display: flex;
+            flex-direction: column;
+            background: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .book-card:active {
+            transform: scale(0.96);
+        }
+
+        /* 模擬真實書本封面的容器 */
+        .book-cover-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4; /* 標準書籍黃金比例 */
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 書脊陰影特效，讓它更像實體書 */
+        .book-cover-wrapper::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 6px;
+            background: linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 100%);
+            z-index: 5;
+        }
+
+        .book-cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .book-info {
+            margin-top: 10px;
+            padding: 0 2px;
+        }
+
+        .book-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* 最多顯示兩行 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 36.4px; /* 固定高度防止排版錯位 */
+        }
+
+        .book-status-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* 全滿版縮圖上下載進度 Overlay */
+        .thumb-progress-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 122, 255, 0.8);
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 10;
+            display: none;
+        }
+        /* ────────────────────────── */
 
         /* 底部按鈕區 - 完全模擬 iOS 行動介面 */
         .bottom-nav {
@@ -573,64 +667,52 @@
             border-radius: 50%;
             display: inline-block;
         }
-        
-        /* 縮圖上下載進度 Overlay */
-        .thumb-progress-overlay {
-            position: absolute;
-            bottom: 0; left: 0; width: 100%;
-            background: rgba(0, 122, 255, 0.85);
-            color: #ffffff;
-            font-size: 10px;
-            text-align: center;
-            font-weight: 600;
-            padding: 2px 0;
-            display: none;
-            backdrop-filter: blur(4px);
-        }
     </style>
 </head>
 <body>
 
-    <header id="nav-title">教科書閱讀</header>
+    <header id="nav-title">教科書書城</header>
 
     <main id="main-content">
         
+        <!-- Tab 1: 教科書書城網格區 -->
         <div id="tab-content-reading" class="tab-content active">
-            <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px; letter-spacing: -0.1px;">智慧型書庫</div>
-            <div class="app-card" style="padding-top: 4px; padding-bottom: 4px;">
+            <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 12px; letter-spacing: -0.1px;">我的智慧書架</div>
+            
+            <!-- 網格書架開始 -->
+            <div class="book-grid">
                 
-                <div class="setting-row" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '初級第一科：人工智慧基礎概論')" style="cursor: pointer;">
-                    <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                        <div style="background: #f2f8ff; width: 42px; height: 42px; border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid var(--border-light);">
-                            <img id="thumb-book1" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>" style="width: 100%; height: 100%; object-fit: cover;">
-                            <div id="thumb-prog-1" class="thumb-progress-overlay">0%</div>
-                        </div>
-                        <div style="flex: 1; min-width: 0; padding: 4px 0;">
-                            <div style="font-size: 16px; font-weight: 500; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">第一科：人工智慧基礎概論</div>
-                            <div class="book-status-text" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf" style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">狀態讀取中...</div>
-                        </div>
+                <!-- 書籍卡片 1 -->
+                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '第一科：人工智慧基礎概論')">
+                    <div class="book-cover-wrapper">
+                        <img id="thumb-book1" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
+                        <div id="thumb-prog-1" class="thumb-progress-overlay">0%</div>
                     </div>
-                    <svg class="svg-icon" style="color: var(--text-muted); width: 14px; height: 14px; flex-shrink: 0;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <div class="book-info">
+                        <div class="book-title">第一科：人工智慧基礎概論</div>
+                        <div class="book-status-text book-status-meta" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf">狀態讀取中...</div>
+                    </div>
                 </div>
 
-                <div class="setting-row" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '初級第二科：生成式 AI 應用與規劃')" style="cursor: pointer;">
-                    <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                        <div style="background: #f2f8ff; width: 42px; height: 42px; border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid var(--border-light);">
-                            <img id="thumb-book2" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>" style="width: 100%; height: 100%; object-fit: cover;">
-                            <div id="thumb-prog-2" class="thumb-progress-overlay">0%</div>
-                        </div>
-                        <div style="flex: 1; min-width: 0; padding: 4px 0;">
-                            <div style="font-size: 16px; font-weight: 500; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">第二科：生成式 AI 應用與規劃</div>
-                            <div class="book-status-text" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf" style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">狀態讀取中...</div>
-                        </div>
+                <!-- 書籍卡片 2 -->
+                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '第二科：生成式 AI 應用與規劃')">
+                    <div class="book-cover-wrapper">
+                        <img id="thumb-book2" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
+                        <div id="thumb-prog-2" class="thumb-progress-overlay">0%</div>
                     </div>
-                    <svg class="svg-icon" style="color: var(--text-muted); width: 14px; height: 14px; flex-shrink: 0;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    <div class="book-info">
+                        <div class="book-title">第二科：生成式 AI 應用與規劃</div>
+                        <div class="book-status-text book-status-meta" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf">狀態讀取中...</div>
+                    </div>
                 </div>
                 
             </div>
+            <!-- 網格書架結束 -->
         </div>
 
+        <!-- Tab 2: 測驗功能區 -->
         <div id="tab-content-quiz" class="tab-content">
+            <!-- 階段一：加載骨架屏 -->
             <div id="stage-loading" class="section active">
                 <div class="skeleton-card">
                     <div class="skeleton-line" style="width: 40%; height: 20px; margin-bottom: 12px;"></div>
@@ -639,6 +721,7 @@
                 </div>
             </div>
 
+            <!-- 階段二：考卷範圍與題數設定 -->
             <div id="stage-config" class="section">
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px;">題庫清單</div>
                 <div class="app-card" id="bank-list-container" style="padding-top: 4px; padding-bottom: 4px;"></div>
@@ -656,6 +739,7 @@
                 </div>
             </div>
 
+            <!-- 階段三：題目填答區 -->
             <div id="stage-quiz" class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px;">
                     <span style="font-size: 12px; font-weight: 600; color: var(--brand-primary);">測驗進行中</span>
@@ -664,6 +748,7 @@
                 <div id="quiz-container"></div>
             </div>
 
+            <!-- 階段四：結果結算與詳解複查 -->
             <div id="stage-result" class="section">
                 <div class="app-card">
                     <div class="score-circle-view">
@@ -678,10 +763,11 @@
 
         <footer class="app-footer">
             <div class="footer-status"><span class="status-dot"></span><span>所有服務運行正常</span></div>
-            <div class="footer-meta"><span>版本 v1.3.1 6792@gcloud.csu.edu.tw</span></div>
+            <div class="footer-meta"><span>版本 v1.4.0 (6792@gcloud.csu.edu.tw)</span></div>
         </footer>
     </main>
 
+    <!-- 各階段對應的 iOS 固定底部控制鈕 -->
     <div class="bottom-nav" id="action-bar-config">
         <button class="btn-action" onclick="generateQuiz()"><span>開始測驗</span></button>
     </div>
@@ -692,6 +778,7 @@
         <button class="btn-action btn-secondary" onclick="location.reload()"><span>開始新測驗</span></button>
     </div>
 
+    <!-- 全局主導覽分頁列 -->
     <nav class="ios-tab-bar">
         <div class="tab-item active" id="tab-btn-reading" onclick="switchGlobalTab('reading')">
             <svg class="tab-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -703,6 +790,7 @@
         </div>
     </nav>
 
+    <!-- PDF 全螢幕電子書檢視器視窗 -->
     <div id="ebook-reader-window" class="ebook-window">
         <div class="reader-header">
             <button class="btn-close" onclick="closeEbook()">✕ 關閉</button>
@@ -712,6 +800,7 @@
                 <span class="zoom-text" id="zoom-indicator">100%</span>
                 <button class="btn-zoom" onclick="adjustZoom(0.25)">+</button>
             </div>
+            <!-- 主 PDF 載入的頂部線性下載進度條 -->
             <div id="reader-progress-bar"></div>
         </div>
         
@@ -794,7 +883,7 @@
         document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         
         if (tabId === 'reading') { 
-            navTitle.innerText = "教科書閱讀"; 
+            navTitle.innerText = "教科書書城"; 
             syncAllReadingProgress(); 
         } else { 
             navTitle.innerText = "專業測驗系統"; 
@@ -837,13 +926,11 @@
         try {
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
             
-            // 下載進度動態回饋
             loadingTask.onProgress = function(progressData) {
                 if (progressData.total > 0) {
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
                     progressBar.style.width = percent + '%';
                     
-                    // 修正：如果到 100% 就直接改回原有書名不留痕跡，否則顯示下載進度
                     if (percent >= 100) {
                         titleEl.innerText = bookTitle;
                     } else {
@@ -853,11 +940,10 @@
             };
 
             currentPdfDoc = await loadingTask.promise;
-            titleEl.innerText = bookTitle; // 確保完成時一定是乾淨書名
+            titleEl.innerText = bookTitle; 
             
             setTimeout(() => { progressBar.style.opacity = '0'; }, 300);
             
-            // 快取總頁數供換算百分比
             localStorage.setItem('ebook_total_' + pdfUrl, currentPdfDoc.numPages);
             
             const savedPage = localStorage.getItem('ebook_progress_' + pdfUrl);
@@ -907,7 +993,6 @@
             if (pageIndicator) pageIndicator.innerText = `${pageNumber} / ${currentPdfDoc.numPages}`;
             document.getElementById('reader-slider').value = pageNumber;
 
-            // 儲存進度並即時更新首頁 UI
             localStorage.setItem('ebook_progress_' + currentPdfUrl, pageNumber);
             syncAllReadingProgress();
 
@@ -975,12 +1060,12 @@
             if (savedPage && totalPages && parseInt(totalPages) > 0) {
                 const percent = Math.round((parseInt(savedPage) / parseInt(totalPages)) * 100);
                 if (percent === 100) {
-                    el.innerHTML = `<span style="color: var(--status-success); font-weight: 600;">✓ 已閱讀完畢 (100%)</span>`;
+                    el.innerHTML = `<span style="color: var(--status-success); font-weight: 600;">✓ 已讀完 (100%)</span>`;
                 } else {
-                    el.innerHTML = `<span style="color: var(--brand-primary); font-weight: 600;">目前閱讀進度 ${percent}%</span>`;
+                    el.innerHTML = `<span style="color: var(--brand-primary); font-weight: 600;">已讀 ${percent}%</span>`;
                 }
             } else {
-                el.innerText = "尚未開始閱讀";
+                el.innerText = "尚未閱讀";
             }
         });
     }
@@ -990,7 +1075,7 @@
         try {
             if (typeof pdfjsLib === 'undefined') return;
             const progressOverlay = document.getElementById(progressId);
-            if (progressOverlay) progressOverlay.style.display = 'block';
+            if (progressOverlay) progressOverlay.style.display = 'flex'; // 用 flex 置中
 
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
             
@@ -998,7 +1083,6 @@
                 if (progressData.total > 0 && progressOverlay) {
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
                     
-                    // 修正：當百分比到 100% 時直接隱藏此下載覆蓋圖層，避免文字殘留
                     if (percent >= 100) {
                         progressOverlay.style.display = 'none';
                     } else {
@@ -1036,7 +1120,7 @@
         initTouchGestures(); 
         syncAllReadingProgress();
 
-        // 啟動封面縮圖製作與進度追蹤
+        // 啟動書本縮圖與下載監聽
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', 'thumb-book1', 'thumb-prog-1');
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', 'thumb-book2', 'thumb-prog-2');
 
