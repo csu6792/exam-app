@@ -156,9 +156,37 @@
         .app-footer { margin-top: 48px; padding: 24px 0 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); text-align: center; }
         .footer-status { display: flex; align-items: center; gap: 6px; font-weight: 500; color: var(--status-success); font-size: 11px; }
         .status-dot { width: 7px; height: 7px; background-color: var(--status-success); border-radius: 50%; display: inline-block; }
+        /* 頂部閱讀計時條樣式 */
+.quiz-timer-banner {
+    text-align: center;
+    padding: 12px;
+    background-color: var(--ios-surface);
+    color: var(--brand-primary);
+    font-weight: 600;
+    font-size: 16px;
+    border-bottom: 1px solid var(--ios-sub-bg);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: none; /* 預設隱藏，開始測驗才顯示 */
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+/* 結果畫面中的時間文字樣式 */
+.time-spent-container {
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--text-secondary);
+}
     </style>
 </head>
 <body>
+
+    <div id="quiz-timer-banner" class="quiz-timer-banner">
+    <span></span> 測驗計時中：<span id="quiz-timer-display">00:00</span>
+    </div>
 
     <!-- 頂部導覽列 -->
     <header>
@@ -191,7 +219,7 @@
                     </div>
                     <div>
                         <div style="font-size: 16px; font-weight: 600;">閱讀測驗系統</div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">版本 v1.6.0</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">版本 v1.7.0</div>
                     </div>
                 </div>
                 <div class="setting-row" style="padding-bottom: 8px;">
@@ -284,6 +312,7 @@
             <div id="stage-result" class="section">
                 <div class="app-card">
                     <div class="score-circle-view"><div class="score-num" id="result-score">0</div><div class="score-lbl">測驗得分</div></div>
+                    <div class="time-spent-container">總花費時間：<span id="quiz-time-spent" style="font-weight: 600; color: var(--text-primary);">0 分 0 秒</span></div>
                     <div style="text-align: center; font-size: 14px; color: var(--text-secondary); font-weight: 500;" id="result-details"></div>
                 </div>
                 <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 24px 4px 12px;">答題複查與解析</div>
@@ -440,6 +469,57 @@
             renderBookPage(currentPdfPage); 
         }
     }
+
+    // === 閱讀測驗計時器核心邏輯 ===
+let quizTimerInterval = null;
+let quizStartTime = 0;
+let quizElapsedSeconds = 0;
+
+// 1. 啟動計時器（請在您「開始測驗」或「載入題目完成」的 function 最後面加上 startQuizTimer();）
+function startQuizTimer() {
+    const timerBanner = document.getElementById('quiz-timer-banner');
+    const timerDisplay = document.getElementById('quiz-timer-display');
+    
+    quizElapsedSeconds = 0;
+    if (timerDisplay) timerDisplay.innerText = "00:00";
+    if (timerBanner) timerBanner.style.display = 'flex'; // 顯示計時條
+    
+    quizStartTime = Date.now();
+    if (quizTimerInterval) clearInterval(quizTimerInterval);
+    
+    quizTimerInterval = setInterval(() => {
+        const elapsedMs = Date.now() - quizStartTime;
+        quizElapsedSeconds = Math.floor(elapsedMs / 1000);
+        
+        const minutes = Math.floor(quizElapsedSeconds / 60).toString().padStart(2, '0');
+        const seconds = (quizElapsedSeconds % 60).toString().padStart(2, '0');
+        
+        if (timerDisplay) timerDisplay.innerText = `${minutes}:${seconds}`;
+    }, 1000);
+}
+
+// 2. 結束計時器並寫入結果 HTML（請在您「計算分數/顯示結果畫面」的 function 開頭加上 stopQuizTimer();）
+function stopQuizTimer() {
+    if (quizTimerInterval) {
+        clearInterval(quizTimerInterval);
+        quizTimerInterval = null;
+    }
+    
+    // 隱藏頂部計時條
+    const timerBanner = document.getElementById('quiz-timer-banner');
+    if (timerBanner) timerBanner.style.display = 'none';
+    
+    // 計算總時間
+    const minutes = Math.floor(quizElapsedSeconds / 60);
+    const seconds = quizElapsedSeconds % 60;
+    const timeString = `${minutes} 分 ${seconds} 秒`;
+    
+    // 直接寫入第三步建立的 HTML 結果欄位中
+    const timeSpentDisplay = document.getElementById('quiz-time-spent');
+    if (timeSpentDisplay) {
+        timeSpentDisplay.innerText = timeString;
+    }
+}
 
     // --- Tab 切換 ---
     function switchGlobalTab(tabId) {
@@ -782,6 +862,7 @@
             card.innerHTML = `<div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px; border-bottom: 0.5px solid var(--border-light); padding-bottom: 6px;"><span>${q.category || q.sourceBank}</span><span style="color:var(--text-muted);">REF: ${q.id || 'N/A'}</span></div><div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; line-height: 1.4;"><span style="color: var(--brand-primary); margin-right: 4px;">${index + 1}.</span>${q.question}</div><div>${optionsHtml}</div><div id="feedback-${index}" class="status-banner"></div>`;
             container.appendChild(card);
         });
+        startQuizTimer();
     }
 
     function submitQuiz() {
@@ -813,6 +894,7 @@
         
         document.getElementById('result-score').innerText = Math.round((score / currentQuiz.length) * 100);
         document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length}`;
+        stopQuizTimer();
         showSection('stage-result');
     }
 
