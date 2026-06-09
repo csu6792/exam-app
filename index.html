@@ -942,33 +942,48 @@ function stopQuizTimer() {
 
     // 🌟 觸發更新提示：改為抓取獨立的 update_log.md
     async function showUpdatePrompt() {
-        try {
-            // 加時間戳記 ?t=... 是為了防止瀏覽器快取這個 MD 檔案，確保抓到最新的內容
-            const res = await fetch('data/update_log.md?t=' + new Date().getTime(), { cache: 'no-store' });
-            if (res.ok) {
-                const text = await res.text();
-                document.getElementById('update-md-content').innerText = text;
-            } else {
-                document.getElementById('update-md-content').innerText = "系統有全新升級，請立即更新以獲取最新題庫與功能。";
-            }
-        } catch (e) {
-            document.getElementById('update-md-content').innerText = "發現新版本！請點擊下方按鈕進行更新。";
+    // 💡 核心防護：建立一個 2 秒超時的斷路器，防止 iOS 網路延遲導致整個函式永久卡死
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000));
+
+    try {
+        // 使用 Promise.race，如果 2 秒內 fetch 沒回應，直接強制跳到 catch 區塊
+        const fetchPromise = fetch('data/update_log.md?t=' + new Date().getTime(), { cache: 'no-store' });
+        const res = await Promise.race([fetchPromise, timeout]);
+
+        if (res.ok) {
+            const text = await res.text();
+            document.getElementById('update-md-content').innerText = text;
+        } else {
+            document.getElementById('update-md-content').innerText = "系統有全新升級，請立即更新以獲取最新題庫與功能。";
         }
-        
-        // 顯示 iOS 風格彈出視窗
-        const overlay = document.getElementById('update-modal-overlay');
+    } catch (e) {
+        // 當網路逾時、斷線或失敗時，立刻採用您原本設定的預設文字，確保流程繼續不卡死
+        document.getElementById('update-md-content').innerText = "發現新版本！請點擊下方按鈕進行更新。";
+    }
+    
+    // 顯示 iOS 風格彈出視窗（百分之百保證一定會觸發顯示）
+    const overlay = document.getElementById('update-modal-overlay');
+    if (overlay) {
         overlay.style.visibility = 'visible';
         overlay.style.display = 'flex';
         setTimeout(() => overlay.classList.add('show'), 10);
+    }
 
-        // 綁定「立即更新」按鈕動作：發送訊息通知 sw.js 啟用新快取
-        document.getElementById('btn-confirm-update').onclick = () => {
-            if (newWorker) {
+    // 綁定「立即更新」按鈕動作
+    const btnConfirm = document.getElementById('btn-confirm-update');
+    if (btnConfirm) {
+        btnConfirm.onclick = () => {
+            // 補上全域安全檢查：如果 newWorker 存在則發送訊息，若消失了則執行安全重整降級
+            if (window.newWorker) {
+                window.newWorker.postMessage('SKIP_WAITING');
+            } else if (typeof newWorker !== 'undefined' && newWorker) {
                 newWorker.postMessage('SKIP_WAITING');
+            } else {
+                window.location.reload();
             }
         };
     }
-
+}
     // 使用者點選稍後
     function dismissUpdate() {
         const overlay = document.getElementById('update-modal-overlay');
