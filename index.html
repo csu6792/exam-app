@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>閱讀測驗系統</title>
-    <!-- 引入 PWA 清單與核心 PDF.js -->
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
@@ -29,176 +28,73 @@
             --transition-ios: all 0.28s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: var(--ios-bg); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: var(--ios-bg);
-            color: var(--text-primary);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* --- 📱 頂部導覽列 --- */
-        header {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 0.5px solid var(--border-light);
-            z-index: 100;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .header-title {
-            font-size: 17px;
-            font-weight: 600;
-            letter-spacing: -0.4px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        .hamburger-btn {
-            background: none;
-            border: none;
-            color: var(--brand-primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 101;
-            padding: 4px;
-        }
+        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border-light); z-index: 100; flex-shrink: 0; position: relative; }
+        .header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.4px; position: absolute; left: 50%; transform: translateX(-50%); }
+        .hamburger-btn { background: none; border: none; color: var(--brand-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 101; padding: 4px; }
         .hamburger-btn .svg-icon { width: 24px; height: 24px; }
 
-        /* --- 🍔 側邊漢堡選單 --- */
-        .side-menu-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); z-index: 1000;
-            opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
-        }
+        .side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
         .side-menu-overlay.show { opacity: 1; visibility: visible; }
-        
-        .side-menu {
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-            background: var(--ios-bg); z-index: 1001;
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1);
-        }
+        .side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--ios-bg); z-index: 1001; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1); }
         .side-menu.show { transform: translateX(280px); }
-        .side-menu-header {
-            padding: 14px 16px; background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-bottom: 0.5px solid var(--border-light);
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .side-menu-header { padding: 14px 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
         .side-menu-content { flex: 1; overflow-y: auto; padding: 16px; }
 
-        main {
-            flex: 1; overflow-y: auto; padding: 16px;
-            padding-bottom: calc(140px + env(safe-area-inset-bottom));
-            scroll-behavior: smooth;
+        /* --- 🌟 iOS Update Modal (更新提示視窗) --- */
+        .update-modal {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            width: 85%; max-width: 320px; border-radius: 14px; display: flex; flex-direction: column;
+            overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* --- 🛒 電子書城與網格 --- */
-        .book-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 20px; padding: 8px 4px;
+        .side-menu-overlay.show .update-modal { transform: scale(1); }
+        .update-modal-body { padding: 20px 16px 16px; text-align: center; }
+        .update-modal-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.4px; }
+        .update-modal-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.4; }
+        .update-md-box {
+            background: rgba(0,0,0,0.04); border-radius: 8px; padding: 12px; font-size: 12px;
+            color: var(--text-primary); text-align: left; max-height: 160px; overflow-y: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; white-space: pre-wrap; line-height: 1.5;
+            border: 0.5px solid var(--border-light);
         }
-
-        .book-card {
-            display: flex; flex-direction: column; background: none;
-            cursor: pointer; transition: transform 0.2s ease;
+        .update-modal-actions { display: flex; border-top: 0.5px solid var(--border-light); }
+        .btn-update-action {
+            flex: 1; padding: 14px; background: none; border: none; font-size: 17px;
+            color: var(--brand-primary); cursor: pointer; transition: background 0.2s;
         }
+        .btn-update-action:active { background: rgba(0,0,0,0.05); }
+        .btn-update-confirm { font-weight: 600; border-left: 0.5px solid var(--border-light); }
+
+        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(140px + env(safe-area-inset-bottom)); scroll-behavior: smooth; }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+
+        .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; padding: 8px 4px; }
+        .book-card { display: flex; flex-direction: column; background: none; cursor: pointer; transition: transform 0.2s ease; }
         .book-card:active { transform: scale(0.96); }
-
-        .book-cover-wrapper {
-            position: relative; width: 100%; aspect-ratio: 3 / 4; 
-            background: #ffffff; border-radius: 8px; overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 0.5px solid rgba(0, 0, 0, 0.08); display: flex;
-            align-items: center; justify-content: center;
-            transition: opacity 0.3s ease, filter 0.3s ease;
-        }
-        .book-cover-wrapper::after {
-            content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 6px;
-            background: linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 100%); z-index: 5;
-        }
-
+        .book-cover-wrapper { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05); border: 0.5px solid rgba(0, 0, 0, 0.08); display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease, filter 0.3s ease; }
+        .book-cover-wrapper::after { content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 6px; background: linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 100%); z-index: 5; }
         .book-cover-img { width: 100%; height: 100%; object-fit: cover; }
         .book-info { margin-top: 10px; padding: 0 2px; }
-        .book-title {
-            font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.3;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 36.4px; 
-        }
+        .book-title { font-size: 14px; font-weight: 600; color: var(--text-primary); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 36.4px; }
         .book-status-meta { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+        .thumb-progress-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 122, 255, 0.8); color: #ffffff; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10; display: none; }
 
-        .thumb-progress-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 122, 255, 0.8); color: #ffffff; font-size: 16px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10; display: none;
-        }
+        .level-badge { position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; color: #ffffff; z-index: 15; box-shadow: 0 2px 6px rgba(0,0,0,0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); letter-spacing: 0.5px; }
+        .level-badge.beginner { background-color: rgba(52, 199, 89, 0.85); }
+        .level-badge.intermediate { background-color: rgba(0, 122, 255, 0.85); }
+        .level-badge.advanced { background-color: rgba(255, 59, 48, 0.85); }
+        .level-badge.default { background-color: rgba(142, 142, 147, 0.85); }
 
-        /* --- 🏷️ 級別標籤 (左上角) --- */
-        .level-badge {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #ffffff;
-            z-index: 15;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            letter-spacing: 0.5px;
-        }
-        /* 依據級別改變顏色 */
-        .level-badge.beginner { background-color: rgba(52, 199, 89, 0.85); }     /* 綠色 - 初級 */
-        .level-badge.intermediate { background-color: rgba(0, 122, 255, 0.85); } /* 藍色 - 中級 */
-        .level-badge.advanced { background-color: rgba(255, 59, 48, 0.85); }     /* 紅色 - 高級 */
-        .level-badge.default { background-color: rgba(142, 142, 147, 0.85); }    /* 灰色 - 其他 */
-
-        /* --- 📚 題庫書本選取特效 --- */
         .quiz-bank-card { position: relative; }
-        .check-badge {
-            position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
-            background-color: var(--brand-primary); color: white; border-radius: 50%;
-            display: none; align-items: center; justify-content: center; border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 20;
-        }
+        .check-badge { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; background-color: var(--brand-primary); color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 20; }
         .quiz-bank-card.selected .check-badge { display: flex; }
         .quiz-bank-card:not(.selected) .book-cover-wrapper { opacity: 0.6; filter: grayscale(80%); }
 
-        /* ────────────────────────── */
-        .bottom-nav {
-            position: fixed; bottom: calc(50px + env(safe-area-inset-bottom)); left: 0; width: 100%;
-            background: linear-gradient(to top, rgba(242,242,247,0.95) 80%, rgba(242,242,247,0));
-            padding: 16px; z-index: 150; display: none;
-        }
-
-        .ios-tab-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: calc(50px + env(safe-area-inset-bottom));
-            background: rgba(249, 249, 249, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid var(--border-light); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom);
-        }
+        .bottom-nav { position: fixed; bottom: calc(50px + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, rgba(242,242,247,0.95) 80%, rgba(242,242,247,0)); padding: 16px; z-index: 150; display: none; }
+        .ios-tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(50px + env(safe-area-inset-bottom)); background: rgba(249, 249, 249, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--border-light); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--brand-inactive); cursor: pointer; transition: color 0.15s ease; }
         .tab-item.active { color: var(--brand-primary); }
         .tab-icon { width: 22px; height: 22px; margin-bottom: 2px; fill: none; stroke: currentColor; stroke-width: 2.2; }
@@ -231,13 +127,10 @@
         .btn-action { width: 100%; padding: 14px 24px; border-radius: 12px; font-size: 17px; font-weight: 600; border: none; cursor: pointer; color: #ffffff; background-color: var(--brand-primary); transition: var(--transition-ios); display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-action:active { opacity: 0.7; transform: scale(0.99); }
         .btn-secondary { background-color: var(--ios-surface); color: var(--brand-primary); }
-        
         .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid var(--border-light); }
         .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
-
         .input-number-wrapper { display: flex; align-items: center; background: #eeeeee; border-radius: 8px; padding: 6px 12px; flex-shrink: 0; margin-left: 16px; }
         .input-number-wrapper input { width: 50px; border: none; background: transparent; text-align: center; font-size: 16px; font-weight: 500; outline: none; }
-
         .option-container { display: flex; align-items: center; padding: 14px 16px; margin-bottom: 10px; border-radius: 10px; background-color: var(--ios-sub-bg); border: 0.5px solid var(--border-light); cursor: pointer; }
         .option-container input[type="radio"] { display: none; }
         .option-badge { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #c6c6c8; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-right: 12px; }
@@ -248,23 +141,18 @@
         .option-container.correct .option-badge { background-color: var(--status-success) !important; border-color: var(--status-success) !important; color: #ffffff !important; }
         .option-container.wrong { border-color: var(--status-error) !important; background-color: var(--status-error-bg) !important; }
         .option-container.wrong .option-badge { background-color: var(--status-error) !important; border-color: var(--status-error) !important; color: #ffffff !important; }
-
         .status-banner { margin-top: 14px; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; display: none; align-items: center; gap: 8px; }
         .status-banner.show { display: flex; }
         .status-banner.correct { background-color: var(--status-success-bg); color: var(--status-success); }
         .status-banner.wrong { background-color: var(--status-error-bg); color: var(--status-error); }
         .status-banner.unanswered { background-color: var(--status-warning-bg); color: var(--status-warning); }
-
         .skeleton-card { padding: 16px; background: var(--ios-surface); border-radius: 12px; margin-bottom: 24px; }
         .skeleton-line { background: linear-gradient(90deg, #e5e5ea 25%, #d1d1d6 50%, #e5e5ea 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-
         .score-circle-view { text-align: center; padding: 24px 0; }
         .score-num { font-size: 72px; font-weight: 700; color: var(--brand-primary); line-height: 1; letter-spacing: -2px; }
         .score-lbl { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; }
-
         .svg-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-
         .app-footer { margin-top: 48px; padding: 24px 0 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); text-align: center; }
         .footer-status { display: flex; align-items: center; gap: 6px; font-weight: 500; color: var(--status-success); font-size: 11px; }
         .status-dot { width: 7px; height: 7px; background-color: var(--status-success); border-radius: 50%; display: inline-block; }
@@ -303,7 +191,7 @@
                     </div>
                     <div>
                         <div style="font-size: 16px; font-weight: 600;">閱讀測驗系統</div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">版本 v1.4.3</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">版本 v1.6.0</div>
                     </div>
                 </div>
                 <div class="setting-row" style="padding-bottom: 8px;">
@@ -314,17 +202,30 @@
         </div>
     </div>
 
+    <!-- 🌟 PWA 偵測新版本提示框 (Modal) -->
+    <div id="update-modal-overlay" class="side-menu-overlay" style="z-index: 9999; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0;">
+        <div class="update-modal">
+            <div class="update-modal-body">
+                <div class="update-modal-title">發現新版本！</div>
+                <div class="update-modal-desc">以下是最新的系統更新內容，建議您立即更新以獲取最佳體驗：</div>
+                <!-- 這裡將會讀取 update_log.md 的內容 -->
+                <div id="update-md-content" class="update-md-box">正在讀取更新日誌...</div>
+            </div>
+            <div class="update-modal-actions">
+                <button class="btn-update-action" onclick="dismissUpdate()">稍後</button>
+                <button class="btn-update-action btn-update-confirm" id="btn-confirm-update">立即更新</button>
+            </div>
+        </div>
+    </div>
+
     <main id="main-content">
         
-        <!-- Tab 1: 教科書書城方塊區 -->
+        <!-- Tab 1: 書城區 -->
         <div id="tab-content-reading" class="tab-content active">
             <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 12px; letter-spacing: -0.1px;">我的智慧書架</div>
-            
             <div class="book-grid">
-                <!-- 書籍卡片 1 -->
                 <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '第一科：人工智慧基礎概論')">
                     <div class="book-cover-wrapper">
-                        <!-- 新增：級別標籤 -->
                         <div class="level-badge beginner">初級</div>
                         <img id="thumb-book1" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
                         <div id="thumb-prog-1" class="thumb-progress-overlay">0%</div>
@@ -335,10 +236,8 @@
                     </div>
                 </div>
 
-                <!-- 書籍卡片 2 -->
                 <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '第二科：生成式 AI 應用與規劃')">
                     <div class="book-cover-wrapper">
-                        <!-- 新增：級別標籤 -->
                         <div class="level-badge beginner">初級</div>
                         <img id="thumb-book2" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
                         <div id="thumb-prog-2" class="thumb-progress-overlay">0%</div>
@@ -351,27 +250,21 @@
             </div>
         </div>
 
-        <!-- Tab 2: 測驗功能區 -->
+        <!-- Tab 2: 測驗區 -->
         <div id="tab-content-quiz" class="tab-content">
             <div id="stage-loading" class="section active">
-                <div class="skeleton-card">
-                    <div class="skeleton-line" style="width: 40%; height: 20px; margin-bottom: 12px;"></div>
-                    <div class="skeleton-line" style="width: 100%; height: 44px; margin-bottom: 10px;"></div>
-                    <div class="skeleton-line" style="width: 100%; height: 44px;"></div>
-                </div>
+                <div class="skeleton-card"><div class="skeleton-line" style="width: 40%; height: 20px; margin-bottom: 12px;"></div><div class="skeleton-line" style="width: 100%; height: 44px; margin-bottom: 10px;"></div><div class="skeleton-line" style="width: 100%; height: 44px;"></div></div>
             </div>
 
-            <!-- 考卷範圍與題數設定 -->
             <div id="stage-config" class="section">
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 8px;">選擇測驗題庫</div>
-                
                 <div class="book-grid" id="bank-list-container" style="margin-bottom: 16px;"></div>
 
                 <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 16px 4px 8px;">考卷設定</div>
                 <div class="app-card" style="padding-top: 4px; padding-bottom: 4px;">
                     <div class="setting-row" style="border: none;">
                         <div>
-                            <div class="card-title">隨機抽取題目數量</div>
+                            <div class="card-title">隨機抽取數量</div>
                         </div>
                         <div class="input-number-wrapper">
                             <input type="number" id="question-count" value="10" min="1" inputmode="numeric">
@@ -390,10 +283,7 @@
 
             <div id="stage-result" class="section">
                 <div class="app-card">
-                    <div class="score-circle-view">
-                        <div class="score-num" id="result-score">0</div>
-                        <div class="score-lbl">測驗得分</div>
-                    </div>
+                    <div class="score-circle-view"><div class="score-num" id="result-score">0</div><div class="score-lbl">測驗得分</div></div>
                     <div style="text-align: center; font-size: 14px; color: var(--text-secondary); font-weight: 500;" id="result-details"></div>
                 </div>
                 <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 24px 4px 12px;">答題複查與解析</div>
@@ -402,22 +292,14 @@
 
         <footer class="app-footer">
             <!--<div class="footer-status"><span class="status-dot"></span><span>所有服務運行正常</span></div>-->
-            <div class="footer-meta"><span>核心版本: v20260609</span></div>
+            <div class="footer-meta"><span>核心版本:20260609</span></div>
         </footer>
     </main>
 
-    <!-- 底部控制按鈕區 -->
-    <div class="bottom-nav" id="action-bar-config">
-        <button class="btn-action" onclick="generateQuiz()"><span>開始測驗</span></button>
-    </div>
-    <div class="bottom-nav" id="action-bar-quiz">
-        <button class="btn-action" onclick="submitQuiz()"><span>提交試卷並評分</span></button>
-    </div>
-    <div class="bottom-nav" id="action-bar-result">
-        <button class="btn-action btn-secondary" onclick="location.reload()"><span>開始新測驗</span></button>
-    </div>
+    <div class="bottom-nav" id="action-bar-config"><button class="btn-action" onclick="generateQuiz()"><span>開始測驗</span></button></div>
+    <div class="bottom-nav" id="action-bar-quiz"><button class="btn-action" onclick="submitQuiz()"><span>提交試卷並評分</span></button></div>
+    <div class="bottom-nav" id="action-bar-result"><button class="btn-action btn-secondary" onclick="location.reload()"><span>開始新測驗</span></button></div>
 
-    <!-- 全局主導覽分頁列 -->
     <nav class="ios-tab-bar">
         <div class="tab-item active" id="tab-btn-reading" onclick="switchGlobalTab('reading')">
             <svg class="tab-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -429,7 +311,7 @@
         </div>
     </nav>
 
-    <!-- PDF 全螢幕檢視器視窗 -->
+    <!-- PDF 檢視器 (支援雙指縮放) -->
     <div id="ebook-reader-window" class="ebook-window">
         <div class="reader-header">
             <button class="btn-close" onclick="closeEbook()">✕ 關閉</button>
@@ -441,11 +323,9 @@
             </div>
             <div id="reader-progress-bar"></div>
         </div>
-        
         <div class="reader-viewport" id="viewport-area">
             <canvas id="pdf-canvas"></canvas>
         </div>
-        
         <div class="reader-footer">
             <input type="range" class="ios-slider" id="reader-slider" min="1" max="1" value="1" oninput="handleSliderInput(this.value)">
             <div class="page-controls">
@@ -470,27 +350,76 @@
     let isRenderingPage = false;
     let currentZoomScale = 1.0;
 
+    // --- 🍔 選單 ---
+    function toggleMenu() {
+        document.getElementById('side-menu').classList.toggle('show');
+        document.getElementById('side-menu-overlay').classList.toggle('show');
+    }
+
+    // --- ✌️ 雙指縮放 (Pinch-to-Zoom) 與滑動翻頁整合 ---
     let touchStartX = 0; let touchEndX = 0;
     let touchStartY = 0; let touchEndY = 0;
+    let initialPinchDistance = null;
+    let initialZoomScale = 1.0;
+    let currentVisualScale = 1.0;
 
-    function toggleMenu() {
-        const menu = document.getElementById('side-menu');
-        const overlay = document.getElementById('side-menu-overlay');
-        menu.classList.toggle('show');
-        overlay.classList.toggle('show');
+    function getPinchDistance(e) {
+        return Math.hypot(e.touches[0].screenX - e.touches[1].screenX, e.touches[0].screenY - e.touches[1].screenY);
     }
 
     function initTouchGestures() {
         const viewportArea = document.getElementById('viewport-area');
-        if (!viewportArea) return;
+        const canvas = document.getElementById('pdf-canvas');
+        if (!viewportArea || !canvas) return;
+
         viewportArea.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX; 
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
+            if (e.touches.length === 1) {
+                touchStartX = e.touches[0].screenX; 
+                touchStartY = e.touches[0].screenY;
+                initialPinchDistance = null;
+            } else if (e.touches.length === 2) {
+                initialPinchDistance = getPinchDistance(e);
+                initialZoomScale = currentZoomScale;
+            }
+        }, { passive: false });
+
+        viewportArea.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && initialPinchDistance) {
+                e.preventDefault(); 
+                const currentDistance = getPinchDistance(e);
+                currentVisualScale = currentDistance / initialPinchDistance;
+                
+                let tempScale = initialZoomScale * currentVisualScale;
+                if (tempScale < 0.5) tempScale = 0.5;
+                if (tempScale > 3.0) tempScale = 3.0;
+                
+                const visualTransformScale = tempScale / initialZoomScale;
+                canvas.style.transition = 'none'; 
+                canvas.style.transform = `scale(${visualTransformScale})`;
+            }
+        }, { passive: false });
+
         viewportArea.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX; 
-            touchEndY = e.changedTouches[0].screenY;
-            handleSwipeGesture();
+            if (initialPinchDistance !== null && e.touches.length < 2) {
+                initialPinchDistance = null;
+                let finalScale = initialZoomScale * currentVisualScale;
+                if (finalScale < 0.75) finalScale = 0.75;
+                if (finalScale > 2.5) finalScale = 2.5;
+                
+                canvas.style.transform = 'none';
+                canvas.style.transition = 'transform 0.32s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.32s ease';
+                
+                if (Math.abs(finalScale - currentZoomScale) > 0.05) {
+                    currentZoomScale = finalScale;
+                    document.getElementById('zoom-indicator').innerText = Math.round(currentZoomScale * 100) + "%";
+                    renderBookPage(currentPdfPage); 
+                }
+                currentVisualScale = 1.0;
+            } else if (e.changedTouches.length === 1 && initialPinchDistance === null) {
+                touchEndX = e.changedTouches[0].screenX; 
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipeGesture();
+            }
         }, { passive: true });
     }
 
@@ -512,6 +441,7 @@
         }
     }
 
+    // --- Tab 切換 ---
     function switchGlobalTab(tabId) {
         activeGlobalTab = tabId;
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
@@ -522,13 +452,8 @@
         const navTitle = document.getElementById('nav-title');
         document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         
-        if (tabId === 'reading') { 
-            navTitle.innerText = "閱讀測驗系統"; 
-            syncAllReadingProgress(); 
-        } else { 
-            navTitle.innerText = "閱讀測驗系統"; 
-            restoreQuizActionBar(); 
-        }
+        if (tabId === 'reading') { navTitle.innerText = "閱讀測驗系統"; syncAllReadingProgress(); } 
+        else { navTitle.innerText = "閱讀測驗系統"; restoreQuizActionBar(); }
         document.getElementById('main-content').scrollTo(0, 0);
     }
 
@@ -548,6 +473,7 @@
         if (activeQuizSection === 'stage-result') document.getElementById('action-bar-result').style.display = 'block';
     }
 
+    // --- PDF ---
     async function openEbook(pdfUrl, bookTitle) {
         currentPdfUrl = pdfUrl; 
         const readerWin = document.getElementById('ebook-reader-window');
@@ -555,59 +481,46 @@
         const progressBar = document.getElementById('reader-progress-bar');
         
         titleEl.innerText = "下載資料中 0%";
-        progressBar.style.width = '0%';
-        progressBar.style.opacity = '1';
+        progressBar.style.width = '0%'; progressBar.style.opacity = '1';
         readerWin.style.display = 'flex'; 
 
         currentZoomScale = 1.0;
         document.getElementById('zoom-indicator').innerText = "100%";
+        document.getElementById('pdf-canvas').style.transform = 'none';
 
         try {
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
-            
             loadingTask.onProgress = function(progressData) {
                 if (progressData.total > 0) {
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
                     progressBar.style.width = percent + '%';
-                    
-                    if (percent >= 100) {
-                        titleEl.innerText = bookTitle;
-                    } else {
-                        titleEl.innerText = `下載資料中 ${percent}%`;
-                    }
+                    if (percent >= 100) titleEl.innerText = bookTitle;
+                    else titleEl.innerText = `下載資料中 ${percent}%`;
                 }
             };
 
             currentPdfDoc = await loadingTask.promise;
             titleEl.innerText = bookTitle; 
-            
             setTimeout(() => { progressBar.style.opacity = '0'; }, 300);
             
             localStorage.setItem('ebook_total_' + pdfUrl, currentPdfDoc.numPages);
-            
             const savedPage = localStorage.getItem('ebook_progress_' + pdfUrl);
             if (savedPage) {
                 currentPdfPage = parseInt(savedPage);
                 if (currentPdfPage > currentPdfDoc.numPages || currentPdfPage < 1) currentPdfPage = 1;
-            } else {
-                currentPdfPage = 1;
-            }
+            } else { currentPdfPage = 1; }
             
             const slider = document.getElementById('reader-slider');
-            slider.max = currentPdfDoc.numPages;
-            slider.value = currentPdfPage;
-
+            slider.max = currentPdfDoc.numPages; slider.value = currentPdfPage;
             renderBookPage(currentPdfPage);
         } catch (error) {
-            alert("電子書下載失敗，請檢查網路連線。");
-            closeEbook();
+            alert("電子書下載失敗，請檢查網路連線。"); closeEbook();
         }
     }
 
     async function renderBookPage(pageNumber) {
         if (!currentPdfDoc || isRenderingPage) return;
         isRenderingPage = true;
-
         try {
             const page = await currentPdfDoc.getPage(pageNumber);
             const canvas = document.getElementById('pdf-canvas');
@@ -634,25 +547,17 @@
 
             localStorage.setItem('ebook_progress_' + currentPdfUrl, pageNumber);
             syncAllReadingProgress();
-
-        } catch (err) {
-            console.error(err);
-        } finally {
-            isRenderingPage = false;
-        }
+        } catch (err) { console.error(err); } finally { isRenderingPage = false; }
     }
 
     async function movePage(direction) {
         if (!currentPdfDoc || isRenderingPage) return;
         let targetPage = currentPdfPage + direction;
-        
         if (targetPage >= 1 && targetPage <= currentPdfDoc.numPages) {
             isRenderingPage = true; 
             const canvas = document.getElementById('pdf-canvas');
-            
             if (direction > 0) canvas.style.transform = 'rotateY(-45deg) translateX(-30%) scale(0.9)';
             else canvas.style.transform = 'rotateY(45deg) translateX(30%) scale(0.9)';
-            
             canvas.style.opacity = '0';
             
             setTimeout(async () => {
@@ -669,7 +574,6 @@
                     canvas.style.transform = 'rotateY(0deg) translateX(0) scale(1)';
                     canvas.style.opacity = '1';
                 }, 30);
-                
                 document.getElementById('viewport-area').scrollTo(0, 0);
             }, 300);
         }
@@ -678,15 +582,13 @@
     function handleSliderInput(val) {
         const pageNum = parseInt(val);
         if (pageNum >= 1 && pageNum <= currentPdfDoc.numPages) {
-            currentPdfPage = pageNum;
-            renderBookPage(currentPdfPage); 
+            currentPdfPage = pageNum; renderBookPage(currentPdfPage); 
         }
     }
 
     function closeEbook() {
         document.getElementById('ebook-reader-window').style.display = 'none';
-        currentPdfDoc = null;
-        syncAllReadingProgress();
+        currentPdfDoc = null; syncAllReadingProgress();
     }
 
     function syncAllReadingProgress() {
@@ -697,14 +599,9 @@
 
             if (savedPage && totalPages && parseInt(totalPages) > 0) {
                 const percent = Math.round((parseInt(savedPage) / parseInt(totalPages)) * 100);
-                if (percent === 100) {
-                    el.innerHTML = `<span style="color: var(--status-success); font-weight: 600;">✓ 已閱讀完成</span>`;
-                } else {
-                    el.innerHTML = `<span style="color: var(--brand-primary); font-weight: 600;">已閱讀 ${percent}%</span>`;
-                }
-            } else {
-                el.innerText = "尚未閱讀";
-            }
+                if (percent === 100) el.innerHTML = `<span style="color: var(--status-success); font-weight: 600;">✓ 已閱讀完成</span>`;
+                else el.innerHTML = `<span style="color: var(--brand-primary); font-weight: 600;">已閱讀 ${percent}%</span>`;
+            } else { el.innerText = "尚未閱讀"; }
         });
     }
 
@@ -715,15 +612,11 @@
             if (progressOverlay) progressOverlay.style.display = 'flex'; 
 
             const loadingTask = pdfjsLib.getDocument(pdfUrl);
-            
             loadingTask.onProgress = function(progressData) {
                 if (progressData.total > 0 && progressOverlay) {
                     const percent = Math.round((progressData.loaded / progressData.total) * 100);
-                    if (percent >= 100) {
-                        progressOverlay.style.display = 'none';
-                    } else {
-                        progressOverlay.innerText = percent + "%";
-                    }
+                    if (percent >= 100) progressOverlay.style.display = 'none';
+                    else progressOverlay.innerText = percent + "%";
                 }
             };
 
@@ -735,14 +628,11 @@
             const viewport = page.getViewport({ scale: 0.8 });
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+            canvas.height = viewport.height; canvas.width = viewport.width;
             
             await page.render({ canvasContext: context, viewport: viewport }).promise;
-            
             const imgElement = document.getElementById(imgElementId);
             if (imgElement) imgElement.src = canvas.toDataURL();
-            
             if (progressOverlay) progressOverlay.style.display = 'none';
         } catch (error) {
             console.warn("縮圖生成未成功:", error);
@@ -751,6 +641,7 @@
         }
     }
 
+    // --- 載入系統初始設定 ---
     async function initSystem() {
         initTouchGestures(); 
         syncAllReadingProgress();
@@ -758,9 +649,10 @@
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', 'thumb-book1', 'thumb-prog-1');
         makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', 'thumb-book2', 'thumb-prog-2');
 
+        // 📝 這裡繼續使用 bank_list.md 來載入「題庫清單」
         try {
             const mdResponse = await fetch('data/bank_list.md');
-            if (!mdResponse.ok) throw new Error("Manifest (bank_list.md) 讀取失敗。");
+            if (!mdResponse.ok) throw new Error("Manifest 讀取失敗。");
             
             const mdText = await mdResponse.text();
             const lines = mdText.split('\n');
@@ -776,9 +668,7 @@
             if (bankFilesToLoad.length === 0) throw new Error("無可用題庫來源。");
             await loadAllBanks(bankFilesToLoad);
 
-        } catch (error) {
-            console.error(error);
-        }
+        } catch (error) { console.error(error); }
     }
 
     async function loadAllBanks(bankFiles) {
@@ -799,7 +689,6 @@
         }
     }
 
-    // 🏆 核心修改區塊：為動態生成的題庫卡片智慧加入級別標籤
     function renderConfigUI() {
         const container = document.getElementById('bank-list-container');
         let totalQuestionsAvailable = 0;
@@ -809,9 +698,7 @@
             const count = questions.length; 
             totalQuestionsAvailable += count;
 
-            // 智慧解析：從書名中提取級別來決定顏色與文字
-            let levelText = "題庫";
-            let levelClass = "default";
+            let levelText = "題庫"; let levelClass = "default";
             if (displayName.includes("初級")) { levelText = "初級"; levelClass = "beginner"; }
             else if (displayName.includes("中級")) { levelText = "中級"; levelClass = "intermediate"; }
             else if (displayName.includes("高級")) { levelText = "高級"; levelClass = "advanced"; }
@@ -827,17 +714,9 @@
 
             card.innerHTML = `
                 <div class="book-cover-wrapper">
-                    <!-- 動態植入：級別標籤 -->
                     <div class="level-badge ${levelClass}">${levelText}</div>
-                    
-                    <div class="check-badge">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); width:100%; height:100%; display:flex; align-items:center; justify-content:center; color: white; font-size: 24px; font-weight: bold; letter-spacing: 2px;">
-                        EXAM
-                    </div>
+                    <div class="check-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                    <div style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); width:100%; height:100%; display:flex; align-items:center; justify-content:center; color: white; font-size: 24px; font-weight: bold; letter-spacing: 2px;">EXAM</div>
                 </div>
                 <div class="book-info">
                     <div class="book-title">${displayName}</div>
@@ -856,20 +735,12 @@
     function updateQuestionCountLimit() {
         const checkboxes = document.querySelectorAll('.bank-checkbox:checked');
         let currentTotal = 0;
-        checkboxes.forEach(cb => {
-            currentTotal += loadedBanks[cb.value].length;
-        });
-        
+        checkboxes.forEach(cb => { currentTotal += loadedBanks[cb.value].length; });
         const inputEl = document.getElementById('question-count');
         inputEl.max = currentTotal;
-        if (parseInt(inputEl.value) > currentTotal) {
-            inputEl.value = currentTotal;
-        }
-        if (currentTotal === 0) {
-            inputEl.value = 0;
-        } else if (parseInt(inputEl.value) === 0 && currentTotal > 0) {
-            inputEl.value = Math.min(10, currentTotal);
-        }
+        if (parseInt(inputEl.value) > currentTotal) inputEl.value = currentTotal;
+        if (currentTotal === 0) inputEl.value = 0; 
+        else if (parseInt(inputEl.value) === 0 && currentTotal > 0) inputEl.value = Math.min(10, currentTotal);
     }
 
     function generateQuiz() {
@@ -881,14 +752,12 @@
         });
         
         if (questionPool.length === 0) return alert("請至少選擇一個題庫範圍。");
-        
         let count = parseInt(document.getElementById('question-count').value);
         if (isNaN(count) || count < 1) count = 1; 
         count = Math.min(count, questionPool.length);
         
         currentQuiz = [...questionPool].sort(() => Math.random() - 0.5).slice(0, count);
-        renderQuiz(); 
-        showSection('stage-quiz');
+        renderQuiz(); showSection('stage-quiz');
     }
 
     function selectOption(qIndex, key) {
@@ -903,10 +772,8 @@
         document.getElementById('quiz-header').innerText = `共 ${currentQuiz.length} 題`;
         
         currentQuiz.forEach((q, index) => {
-            const card = document.createElement('div'); 
-            card.className = 'app-card';
+            const card = document.createElement('div'); card.className = 'app-card';
             let optionsHtml = '';
-            
             if (q.options && typeof q.options === 'object') {
                 for (const [key, value] of Object.entries(q.options)) {
                     optionsHtml += `<div class="option-container opt-group-${index}" id="label-${index}-${key}" onclick="selectOption(${index}, '${key}')"><input type="radio" id="radio-${index}-${key}" name="q${index}" value="${key}"><div class="option-badge">${key}</div><div class="option-text">${value}</div></div>`;
@@ -923,7 +790,6 @@
             const selected = document.querySelector(`input[name="q${index}"]:checked`);
             const feedback = document.getElementById(`feedback-${index}`);
             const ansKey = q.answer;
-            
             const correctLabel = document.getElementById(`label-${index}-${ansKey}`);
             if (correctLabel) correctLabel.classList.add('correct');
             feedback.className = 'status-banner show';
@@ -934,19 +800,14 @@
 
             if (selected) {
                 if (selected.value === ansKey) {
-                    score++;
-                    feedback.innerHTML = `${svgCorrect} <span>答題正確</span>`;
-                    feedback.classList.add('correct');
+                    score++; feedback.innerHTML = `${svgCorrect} <span>答題正確</span>`; feedback.classList.add('correct');
                 } else {
-                    feedback.innerHTML = `${svgWrong} <span>作答錯誤，正確答案為 (${ansKey})</span>`;
-                    feedback.classList.add('wrong');
+                    feedback.innerHTML = `${svgWrong} <span>作答錯誤，正確答案為 (${ansKey})</span>`; feedback.classList.add('wrong');
                     document.getElementById(`label-${index}-${selected.value}`).classList.add('wrong');
                 }
             } else {
-                feedback.innerHTML = `${svgWarn} <span>未作答，正確答案為 (${ansKey})</span>`;
-                feedback.classList.add('unanswered');
+                feedback.innerHTML = `${svgWarn} <span>未作答，正確答案為 (${ansKey})</span>`; feedback.classList.add('unanswered');
             }
-            
             document.querySelectorAll(`.opt-group-${index}`).forEach(el => el.onclick = null);
         });
         
@@ -955,14 +816,71 @@
         showSection('stage-result');
     }
 
+    // --- 🚀 PWA 依據 Service Worker 變動偵測新版本 ---
+    let newWorker;
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js').then(reg => {
-                console.log('PWA ServiceWorker 註冊成功。');
-            }).catch(err => {
-                console.log('PWA ServiceWorker 註冊失敗: ', err);
+                // 檢查是否有正在等待安裝的新 Service Worker (意即 sw.js 版本號被修改了)
+                reg.addEventListener('updatefound', () => {
+                    newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        // 當新版本下載完成，進入 waiting 狀態時，觸發跳窗提示使用者
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdatePrompt();
+                        }
+                    });
+                });
+            });
+
+            // 當使用者按下「立即更新」，新的 Service Worker 接管後，自動重整網頁套用全新快取
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload(); 
+                }
             });
         });
+    }
+
+    // 🌟 觸發更新提示：改為抓取獨立的 update_log.md
+    async function showUpdatePrompt() {
+        try {
+            // 加時間戳記 ?t=... 是為了防止瀏覽器快取這個 MD 檔案，確保抓到最新的內容
+            const res = await fetch('data/update_log.md?t=' + new Date().getTime(), { cache: 'no-store' });
+            if (res.ok) {
+                const text = await res.text();
+                document.getElementById('update-md-content').innerText = text;
+            } else {
+                document.getElementById('update-md-content').innerText = "系統有全新升級，請立即更新以獲取最新題庫與功能。";
+            }
+        } catch (e) {
+            document.getElementById('update-md-content').innerText = "發現新版本！請點擊下方按鈕進行更新。";
+        }
+        
+        // 顯示 iOS 風格彈出視窗
+        const overlay = document.getElementById('update-modal-overlay');
+        overlay.style.visibility = 'visible';
+        overlay.style.display = 'flex';
+        setTimeout(() => overlay.classList.add('show'), 10);
+
+        // 綁定「立即更新」按鈕動作：發送訊息通知 sw.js 啟用新快取
+        document.getElementById('btn-confirm-update').onclick = () => {
+            if (newWorker) {
+                newWorker.postMessage('SKIP_WAITING');
+            }
+        };
+    }
+
+    // 使用者點選稍後
+    function dismissUpdate() {
+        const overlay = document.getElementById('update-modal-overlay');
+        overlay.classList.remove('show');
+        setTimeout(() => { 
+            overlay.style.visibility = 'hidden'; 
+            overlay.style.display = 'none'; 
+        }, 300);
     }
 
     window.onload = initSystem;
