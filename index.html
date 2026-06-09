@@ -820,8 +820,20 @@
     let newWorker;
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').then(reg => {
-                // 檢查是否有正在等待安裝的新 Service Worker (意即 sw.js 版本號被修改了)
+            // 優化 1：加上 { updateViaCache: 'none' } 強制 iOS 每次都向伺服器檢查最新的 sw.js，繞過 HTTP 快取
+            navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+                console.log('Service Worker 註冊成功');
+
+                // 優化 2：主動呼交 update()，強制 iOS 主畫面 App 每次打開都立刻檢查伺服器是否有新版 sw.js
+                reg.update();
+
+                // 優化 3：如果一打開 App，發現上一次其實已經在背景抓到新版（處於 waiting 狀態）
+                if (reg.waiting) {
+                    newWorker = reg.waiting;
+                    setTimeout(showUpdatePrompt, 500); // 稍微延遲確保畫面渲染完畢後跳出提示
+                }
+
+                // 監聽新版本的下載與安裝狀態
                 reg.addEventListener('updatefound', () => {
                     newWorker = reg.installing;
                     newWorker.addEventListener('statechange', () => {
@@ -831,6 +843,8 @@
                         }
                     });
                 });
+            }).catch(err => {
+                console.error('Service Worker 註冊失敗:', err);
             });
 
             // 當使用者按下「立即更新」，新的 Service Worker 接管後，自動重整網頁套用全新快取
