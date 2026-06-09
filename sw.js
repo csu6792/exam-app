@@ -8,11 +8,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 // 安裝階段：強制把核心靜態資源塞入快取
+// 安裝階段：強制把核心靜態資源塞入快取
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting()) // 🛠️ iOS 優化：安裝完直接允許跳過，加速就緒
+    }) // 🛠️ 修正：移除後面的 .then(() => self.skipWaiting())，讓新版本乖乖待在 waiting 狀態排隊
   );
 });
 
