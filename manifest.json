@@ -1,6 +1,6 @@
 {
   "name": "AI應用規劃師題庫系統",
-  "short_name": "AI應用規劃師題庫系統",
+  "short_name": "AI題庫系統",
   "description": "具備高畫質 PDF 閱讀與智慧模擬測驗的系統",
   "start_url": "index.html",
   "display": "standalone",
@@ -9,12 +9,12 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'></path><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'></path></svg>",
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 24 24'><defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23ffffff' stop-opacity='0.9'/><stop offset='100%' stop-color='%23dbe9ff' stop-opacity='0.6'/></linearGradient><filter id='blur'><feGaussianBlur stdDeviation='0.6'/></filter></defs><rect x='2' y='2' width='20' height='20' rx='5' fill='url(%23bg)' stroke='%23ffffff' stroke-opacity='0.6'/><rect x='5' y='5' width='14' height='14' rx='3' fill='%23ffffff' fill-opacity='0.35' filter='url(%23blur)'/><path d='M7 6h6a3 3 0 0 1 3 3v9' stroke='%23007aff' stroke-width='1.6' fill='none' stroke-linecap='round'/><path d='M7 6v12' stroke='%23007aff' stroke-width='1.6' fill='none' stroke-linecap='round'/><circle cx='15' cy='9' r='0.9' fill='%23007aff'/><circle cx='18' cy='12' r='0.9' fill='%23007aff'/><circle cx='15' cy='15' r='0.9' fill='%23007aff'/></svg>",
       "sizes": "192x192",
       "type": "image/svg+xml"
     },
     {
-      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'></path><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'></path></svg>",
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 24 24'><defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23ffffff' stop-opacity='0.95'/><stop offset='100%' stop-color='%23cfe3ff' stop-opacity='0.55'/></linearGradient><filter id='blur'><feGaussianBlur stdDeviation='0.8'/></filter></defs><rect x='2' y='2' width='20' height='20' rx='5' fill='url(%23bg)' stroke='%23ffffff' stroke-opacity='0.7'/><rect x='5' y='5' width='14' height='14' rx='3' fill='%23ffffff' fill-opacity='0.3' filter='url(%23blur)'/><path d='M7 6h6a3 3 0 0 1 3 3v9' stroke='%23007aff' stroke-width='1.5' fill='none' stroke-linecap='round'/><path d='M7 6v12' stroke='%23007aff' stroke-width='1.5' fill='none' stroke-linecap='round'/><circle cx='15' cy='9' r='1' fill='%23007aff'/><circle cx='18' cy='12' r='1' fill='%23007aff'/><circle cx='15' cy='15' r='1' fill='%23007aff'/></svg>",
       "sizes": "512x512",
       "type": "image/svg+xml"
     }
