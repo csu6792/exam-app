@@ -1,6 +1,6 @@
 {
   "name": "AI應用規劃師題庫系統",
-  "short_name": "AI題庫系統",
+  "short_name": "題庫測驗系統",
   "description": "具備高畫質 PDF 閱讀與智慧模擬測驗的系統",
   "start_url": "index.html",
   "display": "standalone",
