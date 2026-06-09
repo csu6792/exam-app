@@ -11,7 +11,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', event => {
 
   // iOS PWA 建議直接接管，不要卡 waiting
-  self.skipWaiting();
+  //self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME)
