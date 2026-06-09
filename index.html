@@ -902,12 +902,18 @@ function stopQuizTimer() {
     let newWorker;
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
+            // 💡 關鍵防線 1：記錄頁面剛載入時，是否有正在控制網頁的舊版 Service Worker
+            const hasControllerOnLoad = !!navigator.serviceWorker.controller;
+
             // 優化 1：加上 { updateViaCache: 'none' } 強制 iOS 每次都向伺服器檢查最新的 sw.js，繞過 HTTP 快取
             navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
                 console.log('Service Worker 註冊成功');
 
-                // 優化 2：主動呼交 update()，強制 iOS 主畫面 App 每次打開都立刻檢查伺服器是否有新版 sw.js
-                reg.update();
+                // 優化 2：主動呼叫 update()
+                // 🛠️ iOS 修正：稍微延遲 1 秒再執行，避開 App 剛打開時的網路與渲染執行緒衝突，防止核心卡死
+                setTimeout(() => {
+                    reg.update().catch(err => console.log('SW 主動更新檢查跳過:', err));
+                }, 1000);
 
                 // 優化 3：如果一打開 App，發現上一次其實已經在背景抓到新版（處於 waiting 狀態）
                 if (reg.waiting) {
@@ -917,11 +923,17 @@ function stopQuizTimer() {
 
                 // 監聽新版本的下載與安裝狀態
                 reg.addEventListener('updatefound', () => {
-                    newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        // 當新版本下載完成，進入 waiting 狀態時，觸發跳窗提示使用者
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            showUpdatePrompt();
+                    const installingWorker = reg.installing;
+                    if (!installingWorker) return;
+
+                    installingWorker.addEventListener('statechange', () => {
+                        // 🛠️ iOS 修正：只有當新版本下載完成、正式進入 waiting 狀態（installed）時，
+                        // 才指派給全域 newWorker 並觸發彈窗。這能保證使用者按下「立即更新」時，Worker 絕對有能力接收訊息！
+                        if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                newWorker = installingWorker;
+                                showUpdatePrompt();
+                            }
                         }
                     });
                 });
@@ -932,7 +944,12 @@ function stopQuizTimer() {
             // 當使用者按下「立即更新」，新的 Service Worker 接管後，自動重整網頁套用全新快取
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
+                if (refreshing) return;
+                
+                // 💡 關鍵防線 2：iOS 核心防線！
+                // 只有在「頁面初始化時原本就有舊版控制器（代表是舊版手動升級新版）」的情況下才執行 reload。
+                // 這能 100% 阻斷 iOS 在首次安裝、或 Service Worker 自動啟用 claim() 時陷入無限重載、畫面凍結的 PWA 頑疾。
+                if (hasControllerOnLoad) {
                     refreshing = true;
                     window.location.reload(); 
                 }
