@@ -929,16 +929,11 @@ function stopQuizTimer() {
 
                     installingWorker.addEventListener('statechange', () => {
                         if (installingWorker.state === 'installed') {
-
-    if (navigator.serviceWorker.controller) {
-
-        window.newWorker = installingWorker;
-
-        showUpdatePrompt();
-
-    }
-
-}
+                            if (hasControllerOnLoad) {
+                                window.newWorker = installingWorker;
+                                try { showUpdatePrompt(); } catch(e) {}
+                            }
+                        }
                     });
                 });
             }).catch(err => {
@@ -949,16 +944,16 @@ function stopQuizTimer() {
             // 改用修改網址跳轉，徹底解決 iOS 核心凍結 bug
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-
-    if (refreshing) return;
-
-    refreshing = true;
-
-    setTimeout(() => {
-        window.location.reload();
-    }, 300);
-
-});
+                if (refreshing) return;
+                if (hasControllerOnLoad) {
+                    refreshing = true;
+                    setTimeout(() => {
+                        // 🛠️ 使用時間戳記強迫換頁導向，繞過重新整理的當機 Bug
+                        const currentHref = window.location.href.split('?')[0];
+                        window.location.href = currentHref + '?update=' + Date.now();
+                    }, 400);
+                }
+            });
         });
     }
 
