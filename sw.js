@@ -50,8 +50,8 @@ self.addEventListener('activate', event => {
       );
 
     }).then(()=>{
-
-      return self.clients.claim();
+      console.log('SW activated');
+      //return self.clients.claim();
 
     })
 
