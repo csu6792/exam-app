@@ -902,21 +902,26 @@ function stopQuizTimer() {
     let newWorker;
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
+            // 💡 關鍵安全防線 1：記錄頁面剛載入時，是否有正在控制網頁的舊版 Service Worker
+            // 如果為 false，代表是首次安裝或乾淨啟動，iOS 絕對不能跳更新提示，否則必卡死！
             const hasControllerOnLoad = !!navigator.serviceWorker.controller;
 
-            // 🛠️ iOS 修正：標準註冊，避免 WebKit 快取死鎖
+            // 🛠️ iOS 修正：標準註冊
             navigator.serviceWorker.register('sw.js').then(reg => {
                 console.log('Service Worker 註冊成功');
 
-                // 🛠️ iOS 修正：App 剛打開時延遲 2.5 秒再執行 update()，避開開機尖峰
+                // 🛠️ iOS 修正：延遲 2.5 秒再執行 update()，避開開機尖峰
                 setTimeout(() => {
                     reg.update().catch(err => console.log('SW 主動更新檢查跳過:', err));
                 }, 2500);
 
                 // 情況 A：如果一打開 App，發現上一次其實已經抓到新版（處於 waiting 狀態排隊中）
                 if (reg.waiting) {
-                    window.newWorker = reg.waiting; // 確保全域賦值
-                    setTimeout(showUpdatePrompt, 500);
+                    // 💡 安全檢查：只有原本就有舊版在控制（升級情境），才跳視窗
+                    if (hasControllerOnLoad) {
+                        window.newWorker = reg.waiting; // 確保全域賦值
+                        setTimeout(showUpdatePrompt, 500);
+                    }
                 }
 
                 // 情況 B：打開 App 後，這時才在背景觸發「發現新版本」
@@ -925,11 +930,13 @@ function stopQuizTimer() {
                     if (!installingWorker) return;
 
                     installingWorker.addEventListener('statechange', () => {
-                        // 🛠️ iOS 最佳化修正：只要狀態一變成已安裝（installed）排隊中，就直接賦值並彈窗
-                        // 移除 navigator.serviceWorker.controller 的限制，防止冷啟動時被 iOS 核心誤判攔截
                         if (installingWorker.state === 'installed') {
-                            window.newWorker = installingWorker; // 確保全域賦值
-                            showUpdatePrompt();
+                            // 💡 關鍵安全防線 2：只有在確定是「舊版升級新版」的情境下，才跳出更新視窗
+                            // 這能 100% 阻斷 iOS 在首次安裝或乾淨冷啟動時，因為物件未就緒而引發的畫面凍結
+                            if (hasControllerOnLoad) {
+                                window.newWorker = installingWorker; // 確保全域賦值
+                                showUpdatePrompt();
+                            }
                         }
                     });
                 });
@@ -941,8 +948,8 @@ function stopQuizTimer() {
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (refreshing) return;
-                // 💡 只有當一開始網頁確實有被 SW 控制（或我們主動點擊了更新按鈕觸發）時才 reload
-                if (hasControllerOnLoad || window.newWorker) {
+                // 只有原本有舊版控制，或者是我們手動點擊更新觸發時，才允許 reload
+                if (hasControllerOnLoad) {
                     refreshing = true;
                     window.location.reload(); 
                 }
