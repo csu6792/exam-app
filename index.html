@@ -904,30 +904,32 @@ function stopQuizTimer() {
         window.addEventListener('load', () => {
             const hasControllerOnLoad = !!navigator.serviceWorker.controller;
 
-            // 🛠️ iOS 修正：移除 updateViaCache: 'none'，改用標準註冊，避免 WebKit 快取死鎖
+            // 🛠️ iOS 修正：標準註冊，避免 WebKit 快取死鎖
             navigator.serviceWorker.register('sw.js').then(reg => {
                 console.log('Service Worker 註冊成功');
 
-                // 🛠️ iOS 修正：App 剛打開時絕對不要立刻執行 update()，延遲拉長到 2.5 秒，避開 iOS 開機渲染尖峰
+                // 🛠️ iOS 修正：App 剛打開時延遲 2.5 秒再執行 update()，避開開機尖峰
                 setTimeout(() => {
                     reg.update().catch(err => console.log('SW 主動更新檢查跳過:', err));
                 }, 2500);
 
+                // 情況 A：如果一打開 App，發現上一次其實已經抓到新版（處於 waiting 狀態排隊中）
                 if (reg.waiting) {
                     window.newWorker = reg.waiting; // 確保全域賦值
                     setTimeout(showUpdatePrompt, 500);
                 }
 
+                // 情況 B：打開 App 後，這時才在背景觸發「發現新版本」
                 reg.addEventListener('updatefound', () => {
                     const installingWorker = reg.installing;
                     if (!installingWorker) return;
 
                     installingWorker.addEventListener('statechange', () => {
+                        // 🛠️ iOS 最佳化修正：只要狀態一變成已安裝（installed）排隊中，就直接賦值並彈窗
+                        // 移除 navigator.serviceWorker.controller 的限制，防止冷啟動時被 iOS 核心誤判攔截
                         if (installingWorker.state === 'installed') {
-                            if (navigator.serviceWorker.controller) {
-                                window.newWorker = installingWorker; // 確保全域賦值
-                                showUpdatePrompt();
-                            }
+                            window.newWorker = installingWorker; // 確保全域賦值
+                            showUpdatePrompt();
                         }
                     });
                 });
@@ -939,7 +941,8 @@ function stopQuizTimer() {
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (refreshing) return;
-                if (hasControllerOnLoad) {
+                // 💡 只有當一開始網頁確實有被 SW 控制（或我們主動點擊了更新按鈕觸發）時才 reload
+                if (hasControllerOnLoad || window.newWorker) {
                     refreshing = true;
                     window.location.reload(); 
                 }
@@ -976,7 +979,6 @@ function stopQuizTimer() {
 
         // --- 步驟 2：視窗出來後，才在背景偷偷去 fetch 紀錄，失敗或卡住也不影響按鈕功能 ---
         try {
-            // 使用 AbortController 實作真正的強制中斷，防止 iOS 網路底層鎖死
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), 1500); // 1.5 秒沒反應就直接放棄
 
@@ -988,7 +990,6 @@ function stopQuizTimer() {
 
             if (res.ok) {
                 const text = await res.text();
-                // 確定有拿到資料才更新文字
                 if(text.trim()) {
                     document.getElementById('update-md-content').innerText = text;
                 }
