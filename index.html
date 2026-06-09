@@ -902,36 +902,30 @@ function stopQuizTimer() {
     let newWorker;
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // 💡 關鍵防線 1：記錄頁面剛載入時，是否有正在控制網頁的舊版 Service Worker
             const hasControllerOnLoad = !!navigator.serviceWorker.controller;
 
-            // 優化 1：加上 { updateViaCache: 'none' } 強制 iOS 每次都向伺服器檢查最新的 sw.js，繞過 HTTP 快取
-            navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+            // 🛠️ iOS 修正：移除 updateViaCache: 'none'，改用標準註冊，避免 WebKit 快取死鎖
+            navigator.serviceWorker.register('sw.js').then(reg => {
                 console.log('Service Worker 註冊成功');
 
-                // 優化 2：主動呼叫 update()
-                // 🛠️ iOS 修正：稍微延遲 1 秒再執行，避開 App 剛打開時的網路與渲染執行緒衝突，防止核心卡死
+                // 🛠️ iOS 修正：App 剛打開時絕對不要立刻執行 update()，延遲拉長到 2.5 秒，避開 iOS 開機渲染尖峰
                 setTimeout(() => {
                     reg.update().catch(err => console.log('SW 主動更新檢查跳過:', err));
-                }, 1000);
+                }, 2500);
 
-                // 優化 3：如果一打開 App，發現上一次其實已經在背景抓到新版（處於 waiting 狀態）
                 if (reg.waiting) {
-                    newWorker = reg.waiting;
-                    setTimeout(showUpdatePrompt, 500); // 稍微延遲確保畫面渲染完畢後跳出提示
+                    window.newWorker = reg.waiting; // 確保全域賦值
+                    setTimeout(showUpdatePrompt, 500);
                 }
 
-                // 監聽新版本的下載與安裝狀態
                 reg.addEventListener('updatefound', () => {
                     const installingWorker = reg.installing;
                     if (!installingWorker) return;
 
                     installingWorker.addEventListener('statechange', () => {
-                        // 🛠️ iOS 修正：只有當新版本下載完成、正式進入 waiting 狀態（installed）時，
-                        // 才指派給全域 newWorker 並觸發彈窗。這能保證使用者按下「立即更新」時，Worker 絕對有能力接收訊息！
                         if (installingWorker.state === 'installed') {
                             if (navigator.serviceWorker.controller) {
-                                newWorker = installingWorker;
+                                window.newWorker = installingWorker; // 確保全域賦值
                                 showUpdatePrompt();
                             }
                         }
@@ -941,14 +935,10 @@ function stopQuizTimer() {
                 console.error('Service Worker 註冊失敗:', err);
             });
 
-            // 當使用者按下「立即更新」，新的 Service Worker 接管後，自動重整網頁套用全新快取
+            // 控制權轉移自動重整
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (refreshing) return;
-                
-                // 💡 關鍵防線 2：iOS 核心防線！
-                // 只有在「頁面初始化時原本就有舊版控制器（代表是舊版手動升級新版）」的情況下才執行 reload。
-                // 這能 100% 阻斷 iOS 在首次安裝、或 Service Worker 自動啟用 claim() 時陷入無限重載、畫面凍結的 PWA 頑疾。
                 if (hasControllerOnLoad) {
                     refreshing = true;
                     window.location.reload(); 
@@ -957,58 +947,67 @@ function stopQuizTimer() {
         });
     }
 
-    // 🌟 觸發更新提示：改為抓取獨立的 update_log.md
+    // 🌟 觸發更新提示（🛠️ iOS 100% 彈窗保證版）
     async function showUpdatePrompt() {
-    // 💡 核心防護：建立一個 2 秒超時的斷路器，防止 iOS 網路延遲導致整個函式永久卡死
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000));
-
-    try {
-        // 使用 Promise.race，如果 2 秒內 fetch 沒回應，直接強制跳到 catch 區塊
-        const fetchPromise = fetch('data/update_log.md?t=' + new Date().getTime(), { cache: 'no-store' });
-        const res = await Promise.race([fetchPromise, timeout]);
-
-        if (res.ok) {
-            const text = await res.text();
-            document.getElementById('update-md-content').innerText = text;
-        } else {
-            document.getElementById('update-md-content').innerText = "系統有全新升級，請立即更新以獲取最新題庫與功能。";
+        // --- 步驟 1：無論如何，先讓視窗顯示出來（防止因 fetch 卡死導致沒畫面） ---
+        const overlay = document.getElementById('update-modal-overlay');
+        if (overlay) {
+            overlay.style.visibility = 'visible';
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('show'), 10);
         }
-    } catch (e) {
-        // 當網路逾時、斷線或失敗時，立刻採用您原本設定的預設文字，確保流程繼續不卡死
-        document.getElementById('update-md-content').innerText = "發現新版本！請點擊下方按鈕進行更新。";
-    }
-    
-    // 顯示 iOS 風格彈出視窗（百分之百保證一定會觸發顯示）
-    const overlay = document.getElementById('update-modal-overlay');
-    if (overlay) {
-        overlay.style.visibility = 'visible';
-        overlay.style.display = 'flex';
-        setTimeout(() => overlay.classList.add('show'), 10);
+
+        // 先放上預設文字，避免畫面空白
+        document.getElementById('update-md-content').innerText = "發現新版本！系統有全新升級，請點擊下方按鈕進行更新。";
+
+        // 綁定「立即更新」按鈕動作
+        const btnConfirm = document.getElementById('btn-confirm-update');
+        if (btnConfirm) {
+            btnConfirm.onclick = () => {
+                if (window.newWorker) {
+                    window.newWorker.postMessage('SKIP_WAITING');
+                } else if (typeof newWorker !== 'undefined' && newWorker) {
+                    newWorker.postMessage('SKIP_WAITING');
+                } else {
+                    window.location.reload();
+                }
+            };
+        }
+
+        // --- 步驟 2：視窗出來後，才在背景偷偷去 fetch 紀錄，失敗或卡住也不影響按鈕功能 ---
+        try {
+            // 使用 AbortController 實作真正的強制中斷，防止 iOS 網路底層鎖死
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 1500); // 1.5 秒沒反應就直接放棄
+
+            const res = await fetch('data/update_log.md?t=' + Date.now(), { 
+                cache: 'no-store',
+                signal: controller.signal 
+            });
+            clearTimeout(id);
+
+            if (res.ok) {
+                const text = await res.text();
+                // 確定有拿到資料才更新文字
+                if(text.trim()) {
+                    document.getElementById('update-md-content').innerText = text;
+                }
+            }
+        } catch (e) {
+            console.log("iOS 異步獲取日誌跳過，維持預設文字提示。");
+        }
     }
 
-    // 綁定「立即更新」按鈕動作
-    const btnConfirm = document.getElementById('btn-confirm-update');
-    if (btnConfirm) {
-        btnConfirm.onclick = () => {
-            // 補上全域安全檢查：如果 newWorker 存在則發送訊息，若消失了則執行安全重整降級
-            if (window.newWorker) {
-                window.newWorker.postMessage('SKIP_WAITING');
-            } else if (typeof newWorker !== 'undefined' && newWorker) {
-                newWorker.postMessage('SKIP_WAITING');
-            } else {
-                window.location.reload();
-            }
-        };
-    }
-}
     // 使用者點選稍後
     function dismissUpdate() {
         const overlay = document.getElementById('update-modal-overlay');
-        overlay.classList.remove('show');
-        setTimeout(() => { 
-            overlay.style.visibility = 'hidden'; 
-            overlay.style.display = 'none'; 
-        }, 300);
+        if (overlay) {
+            overlay.classList.remove('show');
+            setTimeout(() => { 
+                overlay.style.visibility = 'hidden'; 
+                overlay.style.display = 'none'; 
+            }, 300);
+        }
     }
 
     window.onload = initSystem;
