@@ -902,30 +902,27 @@ function stopQuizTimer() {
     let newWorker;
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // 安全防線：確保頁面一開機就抓住舊的 controller 狀態
             const hasControllerOnLoad = !!navigator.serviceWorker.controller;
 
             navigator.serviceWorker.register('sw.js').then(reg => {
                 console.log('Service Worker 註冊成功');
 
-                // 🛠️ iOS 修正：延遲 3 秒再執行 update()，徹底避開開機尖峰，降低當機率
+                // 延遲 3 秒檢查更新，避開剛開機的效能尖峰
                 setTimeout(() => {
                     try {
                         reg.update().catch(err => console.log('SW 主動更新檢查跳過:', err));
-                    } catch(e) { console.error('reg.update 執行失敗:', e); }
+                    } catch(e) { console.error(e); }
                 }, 3000);
 
-                // 情況 A：如果一打開 App，發現上一次其實已經抓到新版（處於 waiting 狀態）
+                // 情況 A：一打開 App 就在排隊
                 if (reg.waiting) {
                     if (hasControllerOnLoad) {
                         window.newWorker = reg.waiting;
-                        setTimeout(() => {
-                            try { showUpdatePrompt(); } catch(e) { console.error(e); }
-                        }, 500);
+                        setTimeout(() => { try { showUpdatePrompt(); } catch(e) {} }, 500);
                     }
                 }
 
-                // 情況 B：打開 App 後，這時才在背景觸發「發現新版本」
+                // 情況 B：使用到一半背景下載完新版
                 reg.addEventListener('updatefound', () => {
                     const installingWorker = reg.installing;
                     if (!installingWorker) return;
@@ -934,7 +931,7 @@ function stopQuizTimer() {
                         if (installingWorker.state === 'installed') {
                             if (hasControllerOnLoad) {
                                 window.newWorker = installingWorker;
-                                try { showUpdatePrompt(); } catch(e) { console.error(e); }
+                                try { showUpdatePrompt(); } catch(e) {}
                             }
                         }
                     });
@@ -943,68 +940,66 @@ function stopQuizTimer() {
                 console.error('Service Worker 註冊失敗:', err);
             });
 
-            // 控制權轉移自動重整
+            // 💡 核心修正：當控制權轉移時，絕對不要用 window.location.reload()
+            // 改用修改網址跳轉，徹底解決 iOS 核心凍結 bug
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (refreshing) return;
                 if (hasControllerOnLoad) {
                     refreshing = true;
-                    // 加上稍微延遲，確保 iOS 核心有時間把快取寫入磁碟再刷新
                     setTimeout(() => {
-                        window.location.reload(); 
-                    }, 300);
+                        // 🛠️ 使用時間戳記強迫換頁導向，繞過重新整理的當機 Bug
+                        const currentHref = window.location.href.split('?')[0];
+                        window.location.href = currentHref + '?update=' + Date.now();
+                    }, 400);
                 }
             });
         });
     }
 
-    // 🌟 觸發更新提示（🛠️ 防噴錯裝甲版）
+    // 🌟 觸發更新提示
     async function showUpdatePrompt() {
         try {
             const overlay = document.getElementById('update-modal-overlay');
             const contentEl = document.getElementById('update-md-content');
             const btnConfirm = document.getElementById('btn-confirm-update');
 
-            // 💡 防錯機制：如果頁面上根本找不到這些 HTML 元素，立刻放棄執行，防止 JS 噴錯導致網頁卡死
-            if (!overlay || !contentEl || !btnConfirm) {
-                console.error("找不到更新彈窗所需的 HTML 元素，安全終止流程。");
-                return;
-            }
+            if (!overlay || !contentEl || !btnConfirm) return;
 
-            // --- 步驟 1：強制把視窗顯示出來 ---
+            // 顯示視窗
             overlay.style.visibility = 'visible';
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('show'), 10);
 
-            // 先放上預設文字
             contentEl.innerText = "發現新版本！系統有全新升級，請點擊下方按鈕進行更新。";
 
-            // 綁定「立即更新」按鈕動作
+            // 立即更新按鈕
             btnConfirm.onclick = () => {
                 try {
-                    // 💡 為按鈕加上 2.5 秒的「逾時斷路器」，如果按下後 iOS 沒反應，2.5秒後強制刷新網頁解鎖！
+                    // 💡 安全防線：如果 2 秒內沒反應，強行用修改網址的方式解鎖刷新
                     setTimeout(() => {
-                        window.location.reload();
-                    }, 2500);
+                        const currentHref = window.location.href.split('?')[0];
+                        window.location.href = currentHref + '?update=' + Date.now();
+                    }, 2000);
 
-                    // 執行更新訊息傳遞
                     if (window.newWorker && typeof window.newWorker.postMessage === 'function') {
                         window.newWorker.postMessage('SKIP_WAITING');
                     } else if (typeof newWorker !== 'undefined' && newWorker && typeof newWorker.postMessage === 'function') {
                         newWorker.postMessage('SKIP_WAITING');
                     } else {
-                        window.location.reload();
+                        const currentHref = window.location.href.split('?')[0];
+                        window.location.href = currentHref + '?update=' + Date.now();
                     }
                 } catch (btnErr) {
-                    console.error("按鈕執行出錯，強制刷新頁面:", btnErr);
-                    window.location.reload();
+                    const currentHref = window.location.href.split('?')[0];
+                    window.location.href = currentHref + '?update=' + Date.now();
                 }
             };
 
-            // --- 步驟 2：視窗出來後，異步 fetch 紀錄 ---
+            // 異步讀取日誌
             try {
                 const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 1000); // 1秒沒反應就放棄
+                const id = setTimeout(() => controller.abort(), 1000);
 
                 const res = await fetch('data/update_log.md?t=' + Date.now(), { 
                     cache: 'no-store',
@@ -1014,17 +1009,11 @@ function stopQuizTimer() {
 
                 if (res.ok) {
                     const text = await res.text();
-                    if(text && text.trim()) {
-                        contentEl.innerText = text;
-                    }
+                    if(text && text.trim()) contentEl.innerText = text;
                 }
-            } catch (e) {
-                console.log("iOS 異步獲取日誌跳過。");
-            }
+            } catch (e) {}
 
-        } catch (globalErr) {
-            console.error("showUpdatePrompt 發生全域未預期錯誤:", globalErr);
-        }
+        } catch (globalErr) {}
     }
 
     // 使用者點選稍後
@@ -1038,7 +1027,7 @@ function stopQuizTimer() {
                     overlay.style.display = 'none'; 
                 }, 300);
             }
-        } catch(e) { console.error(e); }
+        } catch(e) {}
     }
     window.onload = initSystem;
 </script>
