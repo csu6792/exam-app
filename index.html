@@ -302,7 +302,7 @@
 				</div>
 				<div class="setting-row" style="padding-bottom: 8px;">
 					<div style="font-size: 14px; color: var(--text-secondary);">系統版本</div>
-					<div style="font-size: 14px; font-weight: 500;">v1.1.2</div>
+					<div style="font-size: 14px; font-weight: 500;">v1.2.0</div>
 				</div>
             </div>
 			<button class="btn-action btn-secondary" onclick="openManual()" style="box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 0.5px solid var(--border-light);">
@@ -390,6 +390,45 @@
             </div>
         </div>
 
+		<!-- Tab 3: 測驗分析 -->
+<div id="tab-content-analysis" class="tab-content">
+
+<div class="app-card">
+
+<div class="card-title">作答趨勢</div>
+
+<canvas id="score-chart" 
+style="width:100%;height:220px;">
+</canvas>
+
+
+<div style="
+text-align:center;
+margin-top:12px;
+font-size:15px;
+font-weight:600;
+color:var(--brand-primary);
+">
+目前通過率：
+<span id="pass-rate">0%</span>
+</div>
+
+</div>
+
+
+<div class="app-card">
+
+<div class="card-title">
+最近 500 筆測驗紀錄
+</div>
+
+<div id="quiz-history-list"></div>
+
+</div>
+
+
+</div>
+
         <!--<footer class="app-footer">
             <div class="footer-meta"><span>核心版本:20260609</span></div>
         </footer>-->
@@ -408,6 +447,13 @@
             <svg class="tab-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
             <span class="tab-label">模擬測驗</span>
         </div>
+		<div class="tab-item" id="tab-btn-analysis" onclick="switchGlobalTab('analysis')">
+    <svg class="tab-icon" viewBox="0 0 24 24">
+        <path d="M3 3v18h18"></path>
+        <path d="M7 16l4-5 3 3 5-7"></path>
+    </svg>
+    <span class="tab-label">測驗分析</span>
+</div>
     </nav>
 
     <!-- PDF 檢視器 (支援雙指縮放) -->
@@ -698,6 +744,14 @@
         document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         
         if (tabId === 'reading') { navTitle.innerText = "閱讀測驗系統"; syncAllReadingProgress(); } 
+		else if(tabId==="analysis"){
+
+navTitle.innerText="測驗分析";
+
+renderQuizAnalysis();
+renderHistoryList();
+
+}
         else { navTitle.innerText = "閱讀測驗系統"; restoreQuizActionBar(); }
         document.getElementById('main-content').scrollTo(0, 0);
     }
@@ -1050,6 +1104,188 @@
 		startQuizTimer();
 	}
 
+	function saveQuizHistory(){
+
+    let history =
+    JSON.parse(localStorage.getItem("quiz_history") || "[]");
+
+
+    history.unshift({
+
+        date:new Date().toLocaleString(),
+
+        count: currentQuiz.length,
+
+        score:
+        parseInt(
+        document.getElementById("result-score").innerText
+        ),
+
+        time: quizElapsedSeconds
+
+    });
+
+
+    // 最多500筆
+    if(history.length>500){
+        history = history.slice(0,500);
+    }
+
+
+    localStorage.setItem(
+        "quiz_history",
+        JSON.stringify(history)
+    );
+
+}
+
+	function renderQuizAnalysis(){
+
+let history =
+JSON.parse(
+localStorage.getItem("quiz_history") || "[]"
+);
+
+
+let canvas =
+document.getElementById("score-chart");
+
+if(!canvas) return;
+
+
+let ctx =
+canvas.getContext("2d");
+
+
+ctx.clearRect(
+0,0,
+canvas.width,
+canvas.height
+);
+
+
+if(history.length===0){
+
+document.getElementById(
+"pass-rate"
+).innerText="0%";
+
+return;
+
+}
+
+
+let scores =
+history
+.slice()
+.reverse()
+.map(x=>x.score);
+
+
+
+let pass =
+scores.filter(
+x=>x>=60
+).length;
+
+
+document.getElementById(
+"pass-rate"
+).innerText =
+Math.round(
+pass/scores.length*100
+)+"%";
+
+
+
+let w=canvas.width;
+let h=canvas.height;
+
+
+ctx.beginPath();
+
+
+scores.forEach((s,i)=>{
+
+
+let x =
+i/(scores.length-1)*w;
+
+
+let y =
+h-(s/100*h);
+
+
+
+if(i===0)
+ctx.moveTo(x,y);
+else
+ctx.lineTo(x,y);
+
+
+});
+
+
+ctx.strokeStyle="#007aff";
+ctx.lineWidth=3;
+ctx.stroke();
+
+
+}
+
+	function renderHistoryList(){
+
+let box =
+document.getElementById(
+"quiz-history-list"
+);
+
+if(!box)return;
+
+
+let history =
+JSON.parse(
+localStorage.getItem("quiz_history") || "[]"
+);
+
+
+box.innerHTML="";
+
+
+history.forEach(item=>{
+
+
+box.innerHTML += `
+
+<div style="
+padding:12px 0;
+border-bottom:0.5px solid #ddd;
+">
+
+<div>
+${item.date}
+</div>
+
+<div style="
+margin-top:6px;
+color:#666;
+">
+
+題數 ${item.count} 題　
+分數 ${item.score}　
+時間 ${Math.floor(item.time/60)}分${item.time%60}秒
+
+</div>
+
+</div>
+
+`;
+
+});
+
+
+}
+
     function submitQuiz() {
 		let score = 0;
 		currentQuiz.forEach((q, index) => {
@@ -1087,6 +1323,7 @@
 		document.getElementById('result-score').innerText = Math.round((score / currentQuiz.length) * 100);
 		document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length}`;
 		stopQuizTimer();
+		saveQuizHistory();
 		showSection('stage-result');
 	}
 	
