@@ -38,7 +38,7 @@
 
         .side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
         .side-menu-overlay.show { opacity: 1; visibility: visible; }
-        .side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--ios-bg); z-index: 1001; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1); }
+        .side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--ios-bg); z-index: 1001; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1); touch-action: pan-y; will-change: transform; }
         .side-menu.show { transform: translateX(280px); }
         .side-menu-header { padding: 14px 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
         .side-menu-content { flex: 1; overflow-y: auto; padding: 16px; }
@@ -512,6 +512,177 @@ color:var(--brand-primary);
         document.getElementById('side-menu').classList.toggle('show');
         document.getElementById('side-menu-overlay').classList.toggle('show');
     }
+
+	// === iOS 左右滑側邊選單 ===
+
+let menuTouchStartX = 0;
+let menuTouchCurrentX = 0;
+let menuDragging = false;
+
+
+const sideMenu =
+document.getElementById("side-menu");
+
+
+document.addEventListener(
+"touchstart",
+function(e){
+
+    if(!e.touches.length)return;
+
+    menuTouchStartX =
+    e.touches[0].clientX;
+
+
+    let isOpen =
+    sideMenu.classList.contains("show");
+
+
+    // 左邊緣往右滑才啟動
+    if(!isOpen && menuTouchStartX < 25){
+
+        menuDragging=true;
+
+    }
+    else if(isOpen){
+
+        menuDragging=true;
+
+    }
+
+},
+{passive:true}
+);
+
+
+
+document.addEventListener(
+"touchmove",
+function(e){
+
+if(!menuDragging)return;
+
+
+menuTouchCurrentX =
+e.touches[0].clientX;
+
+
+let diff =
+menuTouchCurrentX-menuTouchStartX;
+
+
+
+let isOpen =
+sideMenu.classList.contains("show");
+
+
+
+if(!isOpen){
+
+    if(diff>0){
+
+        let move =
+        Math.min(diff,280);
+
+        sideMenu.style.transform =
+        `translateX(${move}px)`;
+
+    }
+
+}else{
+
+    let move =
+    280 + diff;
+
+
+    move =
+    Math.max(
+    0,
+    Math.min(move,280)
+    );
+
+
+    sideMenu.style.transform =
+    `translateX(${move}px)`;
+
+}
+
+
+},
+{passive:true}
+);
+
+
+
+document.addEventListener(
+"touchend",
+function(){
+
+
+if(!menuDragging)return;
+
+
+menuDragging=false;
+
+
+let distance =
+menuTouchCurrentX-menuTouchStartX;
+
+
+
+sideMenu.style.transition =
+"transform .28s cubic-bezier(.25,1,.5,1)";
+
+
+if(
+distance>80
+){
+
+// 打開
+sideMenu.classList.add("show");
+
+}
+else if(
+distance<-80
+){
+
+// 關閉
+sideMenu.classList.remove("show");
+
+}
+else{
+
+
+// 回復原狀
+
+if(
+sideMenu.classList.contains("show")
+){
+
+sideMenu.style.transform =
+"translateX(280px)";
+
+}
+else{
+
+sideMenu.style.transform =
+"translateX(0)";
+
+}
+
+}
+
+
+setTimeout(()=>{
+
+sideMenu.style.transform="";
+
+},300);
+
+
+},
+{passive:true}
+);
 
     // --- ✌️ 雙指縮放 (Pinch-to-Zoom) 與滑動翻頁整合 ---
     let touchStartX = 0; let touchEndX = 0;
