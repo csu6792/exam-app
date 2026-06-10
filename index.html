@@ -29,76 +29,18 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html, body {
-    overscroll-behavior: none;
-    overscroll-behavior-y: none;
-}
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: var(--ios-bg); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
 
-body { 
-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif; 
-background-color: var(--ios-bg); 
-color: var(--text-primary); 
-
-height: 100vh;
-
-display: flex; 
-flex-direction: column; 
-
-overflow: hidden;
-
-position: fixed;
-width: 100%;
-
--webkit-font-smoothing: antialiased; 
-}
-
-        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: none; -webkit-backdrop-filter: none; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border-light); z-index: 100; flex-shrink: 0; position: relative; }
+        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border-light); z-index: 100; flex-shrink: 0; position: relative; }
         .header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.4px; position: absolute; left: 50%; transform: translateX(-50%); }
         .hamburger-btn { background: none; border: none; color: var(--brand-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 101; padding: 4px; }
         .hamburger-btn .svg-icon { width: 24px; height: 24px; }
 
-        .side-menu-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 1000;
-
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease;
-
-    will-change: opacity;
-}
-
-.side-menu-overlay.show {
-    opacity: 1;
-    visibility: visible;
-}
-       .side-menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    height: 100%;
-    background: var(--ios-bg);
-    z-index: 1001;
-
-    display: flex;
-    flex-direction: column;
-    box-shadow: 4px 0 16px rgba(0,0,0,0.1);
-    touch-action: pan-y;
-
-    transform: translate3d(-100%, 0, 0);
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-
-    will-change: transform;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-}
-
-.side-menu.show {
-    transform: translate3d(0, 0, 0);
-}        .side-menu-header { padding: 14px 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+        .side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+        .side-menu-overlay.show { opacity: 1; visibility: visible; }
+        .side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--ios-bg); z-index: 1001; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1); }
+        .side-menu.show { transform: translateX(280px); }
+        .side-menu-header { padding: 14px 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
         .side-menu-content { flex: 1; overflow-y: auto; padding: 16px; }
 
         /* --- 🌟 iOS Update Modal (更新提示視窗) --- */
@@ -126,23 +68,7 @@ width: 100%;
         .btn-update-action:active { background: rgba(0,0,0,0.05); }
         .btn-update-confirm { font-weight: 600; border-left: 0.5px solid var(--border-light); }
 
-        main { 
-    flex: 1; 
-
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    -webkit-overflow-scrolling: touch;
-
-    overscroll-behavior-y: contain;
-
-    touch-action: pan-y;
-
-    padding: 16px; 
-    padding-bottom: calc(140px + env(safe-area-inset-bottom)); 
-
-    scroll-behavior: auto;
-}
+        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(140px + env(safe-area-inset-bottom)); scroll-behavior: smooth; }
         .tab-content { display: none; } .tab-content.active { display: block; }
 
         .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; padding: 8px 4px; }
@@ -168,7 +94,7 @@ width: 100%;
         .quiz-bank-card:not(.selected) .book-cover-wrapper { opacity: 0.6; filter: grayscale(80%); }
 
         .bottom-nav { position: fixed; bottom: calc(50px + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, rgba(242,242,247,0.95) 80%, rgba(242,242,247,0)); padding: 16px; z-index: 150; display: none; }
-        .ios-tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(50px + env(safe-area-inset-bottom)); background: rgba(249, 249, 249, 0.94); backdrop-filter: none; -webkit-backdrop-filter: none; border-top: 0.5px solid var(--border-light); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
+        .ios-tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: calc(50px + env(safe-area-inset-bottom)); background: rgba(249, 249, 249, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--border-light); display: flex; z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--brand-inactive); cursor: pointer; transition: color 0.15s ease; }
         .tab-item.active { color: var(--brand-primary); }
         .tab-icon { width: 22px; height: 22px; margin-bottom: 2px; fill: none; stroke: currentColor; stroke-width: 2.2; }
@@ -586,177 +512,6 @@ color:var(--brand-primary);
         document.getElementById('side-menu').classList.toggle('show');
         document.getElementById('side-menu-overlay').classList.toggle('show');
     }
-
-	// === iOS 左右滑側邊選單 ===
-
-let menuTouchStartX = 0;
-let menuTouchCurrentX = 0;
-let menuDragging = false;
-
-
-const sideMenu =
-document.getElementById("side-menu");
-
-
-document.addEventListener(
-"touchstart",
-function(e){
-
-    if(!e.touches.length)return;
-
-    menuTouchStartX =
-    e.touches[0].clientX;
-
-
-    let isOpen =
-    sideMenu.classList.contains("show");
-
-
-    // 左邊緣往右滑才啟動
-    if(!isOpen && menuTouchStartX < 25){
-
-        menuDragging=true;
-
-    }
-    else if(isOpen){
-
-        menuDragging=true;
-
-    }
-
-},
-{passive:true}
-);
-
-
-
-document.addEventListener(
-"touchmove",
-function(e){
-
-if(!menuDragging)return;
-
-
-menuTouchCurrentX =
-e.touches[0].clientX;
-
-
-let diff =
-menuTouchCurrentX-menuTouchStartX;
-
-
-
-let isOpen =
-sideMenu.classList.contains("show");
-
-
-
-if(!isOpen){
-
-    if(diff>0){
-
-        let move =
-        Math.min(diff,280);
-
-        sideMenu.style.transform =
-        `translateX(${move}px)`;
-
-    }
-
-}else{
-
-    let move =
-    280 + diff;
-
-
-    move =
-    Math.max(
-    0,
-    Math.min(move,280)
-    );
-
-
-    sideMenu.style.transform =
-    `translateX(${move}px)`;
-
-}
-
-
-},
-{passive:true}
-);
-
-
-
-document.addEventListener(
-"touchend",
-function(){
-
-
-if(!menuDragging)return;
-
-
-menuDragging=false;
-
-
-let distance =
-menuTouchCurrentX-menuTouchStartX;
-
-
-
-sideMenu.style.transition =
-"transform .28s cubic-bezier(.25,1,.5,1)";
-
-
-if(
-distance>80
-){
-
-// 打開
-sideMenu.classList.add("show");
-
-}
-else if(
-distance<-80
-){
-
-// 關閉
-sideMenu.classList.remove("show");
-
-}
-else{
-
-
-// 回復原狀
-
-if(
-sideMenu.classList.contains("show")
-){
-
-sideMenu.style.transform =
-"translateX(280px)";
-
-}
-else{
-
-sideMenu.style.transform =
-"translateX(0)";
-
-}
-
-}
-
-
-setTimeout(()=>{
-
-sideMenu.style.transform="";
-
-},300);
-
-
-},
-{passive:true}
-);
 
     // --- ✌️ 雙指縮放 (Pinch-to-Zoom) 與滑動翻頁整合 ---
     let touchStartX = 0; let touchEndX = 0;
