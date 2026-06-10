@@ -219,13 +219,30 @@
                     </div>
                     <div>
                         <div style="font-size: 16px; font-weight: 600;">閱讀測驗系統</div>
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">版本 v1.7.10</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">版本 v1.7.2</div>
                     </div>
                 </div>
                 <div class="setting-row" style="padding-bottom: 8px;">
                     <div style="font-size: 14px; color: var(--text-secondary);">開發</div>
                     <div style="font-size: 14px; font-weight: 500;">6792@gcloud.csu.edu.tw</div>
                 </div>
+            </div>
+			<button class="btn-action btn-secondary" onclick="openManual()" style="box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 0.5px solid var(--border-light);">
+                <svg class="svg-icon" viewBox="0 0 24 24" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>查看操作手冊</span>
+            </button>
+        </div>
+    </div>
+	
+	<div id="manual-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease;">
+        <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); width: 85%; max-width: 320px; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);">
+            <div style="padding: 20px 16px 16px; text-align: center;">
+                <div style="font-size: 17px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.4px;">📖 系統操作手冊</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.4;">歡迎使用本系統，以下為功能操作說明：</div>
+                <div id="manual-md-content" style="background: rgba(0,0,0,0.04); border-radius: 8px; padding: 12px; font-size: 13px; color: var(--text-primary); text-align: left; max-height: 240px; overflow-y: auto; font-family: inherit; white-space: pre-wrap; line-height: 1.6; border: 0.5px solid var(--border-light);">正在讀取操作手冊...</div>
+            </div>
+            <div style="display: flex; border-top: 0.5px solid var(--border-light);">
+                <button class="btn-update-action" onclick="closeManual()" style="font-weight: 600; width: 100%; flex: 1; padding: 14px; background: none; border: none; font-size: 17px; color: var(--brand-primary); cursor: pointer;">我知道了</button>
             </div>
         </div>
     </div>
@@ -312,8 +329,8 @@
             <div id="stage-result" class="section">
                 <div class="app-card">
                     <div class="score-circle-view"><div class="score-num" id="result-score">0</div><div class="score-lbl">測驗得分</div></div>
-                    <div class="time-spent-container">總花費時間：<span id="quiz-time-spent" style="font-weight: 600; color: var(--text-primary);">0 分 0 秒</span></div>
                     <div style="text-align: center; font-size: 14px; color: var(--text-secondary); font-weight: 500;" id="result-details"></div>
+					<div class="time-spent-container">總花費時間：<span id="quiz-time-spent" style="font-weight: 600; color: var(--text-primary);">0 分 0 秒</span></div>
                 </div>
                 <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 24px 4px 12px;">答題複查與解析</div>
             </div>
@@ -847,55 +864,145 @@ function stopQuizTimer() {
     }
 
     function renderQuiz() {
-        const container = document.getElementById('quiz-container'); 
-        container.innerHTML = '';
-        document.getElementById('quiz-header').innerText = `共 ${currentQuiz.length} 題`;
-        
-        currentQuiz.forEach((q, index) => {
-            const card = document.createElement('div'); card.className = 'app-card';
-            let optionsHtml = '';
-            if (q.options && typeof q.options === 'object') {
-                for (const [key, value] of Object.entries(q.options)) {
-                    optionsHtml += `<div class="option-container opt-group-${index}" id="label-${index}-${key}" onclick="selectOption(${index}, '${key}')"><input type="radio" id="radio-${index}-${key}" name="q${index}" value="${key}"><div class="option-badge">${key}</div><div class="option-text">${value}</div></div>`;
-                }
-            }
-            card.innerHTML = `<div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px; border-bottom: 0.5px solid var(--border-light); padding-bottom: 6px;"><span>${q.category || q.sourceBank}</span><span style="color:var(--text-muted);">REF: ${q.id || 'N/A'}</span></div><div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; line-height: 1.4;"><span style="color: var(--brand-primary); margin-right: 4px;">${index + 1}.</span>${q.question}</div><div>${optionsHtml}</div><div id="feedback-${index}" class="status-banner"></div>`;
-            container.appendChild(card);
-        });
-        startQuizTimer();
-    }
+		const container = document.getElementById('quiz-container'); 
+		container.innerHTML = '';
+		document.getElementById('quiz-header').innerText = `共 ${currentQuiz.length} 題`;
+		
+		currentQuiz.forEach((q, index) => {
+			const card = document.createElement('div'); card.className = 'app-card';
+			let optionsHtml = '';
+			if (q.options && typeof q.options === 'object') {
+				for (const [key, value] of Object.entries(q.options)) {
+					optionsHtml += `<div class="option-container opt-group-${index}" id="label-${index}-${key}" onclick="selectOption(${index}, '${key}')"><input type="radio" id="radio-${index}-${key}" name="q${index}" value="${key}"><div class="option-badge">${key}</div><div class="option-text">${value}</div></div>`;
+				}
+			}
+			
+			// 🌟 核心修改：動態讀取 q.explanation，若無資料則顯示預設文字
+			const expText = q.explanation ? q.explanation : "本題暫無解析說明。";
+
+			card.innerHTML = `
+				<div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 10px; border-bottom: 0.5px solid var(--border-light); padding-bottom: 6px;">
+					<span>${q.category || q.sourceBank}</span>
+					<span style="color:var(--text-muted);">REF: ${q.id || 'N/A'}</span>
+				</div>
+				<div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; line-height: 1.4;">
+					<span style="color: var(--brand-primary); margin-right: 4px;">${index + 1}.</span>${q.question}
+				</div>
+				<div>${optionsHtml}</div>
+				<div id="feedback-${index}" class="status-banner"></div>
+				
+				<div id="explanation-${index}" style="display: none; margin-top: 12px; padding: 12px; background-color: var(--ios-bg); border-radius: 8px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); border-left: 3px solid var(--brand-inactive);">
+					<strong style="color: var(--text-primary); display: block; margin-bottom: 4px;">💡 題目解析：</strong>
+					<span>${expText}</span>
+				</div>
+			`;
+			container.appendChild(card);
+		});
+		startQuizTimer();
+	}
 
     function submitQuiz() {
-        let score = 0;
-        currentQuiz.forEach((q, index) => {
-            const selected = document.querySelector(`input[name="q${index}"]:checked`);
-            const feedback = document.getElementById(`feedback-${index}`);
-            const ansKey = q.answer;
-            const correctLabel = document.getElementById(`label-${index}-${ansKey}`);
-            if (correctLabel) correctLabel.classList.add('correct');
-            feedback.className = 'status-banner show';
-            
-            const svgCorrect = `<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            const svgWrong = `<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
-            const svgWarn = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+		let score = 0;
+		currentQuiz.forEach((q, index) => {
+			const selected = document.querySelector(`input[name="q${index}"]:checked`);
+			const feedback = document.getElementById(`feedback-${index}`);
+			const explanationBox = document.getElementById(`explanation-${index}`); // 🌟 抓取解析區塊
+			const ansKey = q.answer;
+			const correctLabel = document.getElementById(`label-${index}-${ansKey}`);
+			if (correctLabel) correctLabel.classList.add('correct');
+			feedback.className = 'status-banner show';
+			
+			const svgCorrect = `<svg class="svg-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+			const svgWrong = `<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+			const svgWarn = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
 
-            if (selected) {
-                if (selected.value === ansKey) {
-                    score++; feedback.innerHTML = `${svgCorrect} <span>答題正確</span>`; feedback.classList.add('correct');
+			if (selected) {
+				if (selected.value === ansKey) {
+					score++; feedback.innerHTML = `${svgCorrect} <span>答題正確</span>`; feedback.classList.add('correct');
+				} else {
+					feedback.innerHTML = `${svgWrong} <span>作答錯誤，正確答案為 (${ansKey})</span>`; feedback.classList.add('wrong');
+					document.getElementById(`label-${index}-${selected.value}`).classList.add('wrong');
+				}
+			} else {
+				feedback.innerHTML = `${svgWarn} <span>未作答，正確答案為 (${ansKey})</span>`; feedback.classList.add('unanswered');
+			}
+			
+			// 🌟 核心修改：提交後不論對錯，皆秀出解析
+			if (explanationBox) {
+				explanationBox.style.display = 'block';
+			}
+
+			document.querySelectorAll(`.opt-group-${index}`).forEach(el => el.onclick = null);
+		});
+		
+		document.getElementById('result-score').innerText = Math.round((score / currentQuiz.length) * 100);
+		document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length}`;
+		stopQuizTimer();
+		showSection('stage-result');
+	}
+	
+	// --- 📖 操作手冊開關與讀取邏輯 ---
+    async function openManual() {
+        // 1. 先把漢堡選單收起來
+        toggleMenu();
+
+        const overlay = document.getElementById('manual-modal-overlay');
+        const contentEl = document.getElementById('manual-md-content');
+        if (!overlay || !contentEl) return;
+
+        // 2. 彈出 iOS 視窗
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            if (overlay.firstElementChild) {
+                overlay.firstElementChild.style.transform = 'scale(1)';
+            }
+        }, 20);
+
+        contentEl.innerText = "正在讀取操作手冊...";
+
+        // 3. 異步讀取指定的 md 檔案 (假設路徑放在 data/manual.md)
+        try {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 1500); // 1.5秒超時防禦
+
+            const res = await fetch('data/manual.md?t=' + Date.now(), { 
+                cache: 'no-store',
+                signal: controller.signal 
+            });
+            clearTimeout(id);
+
+            if (res.ok) {
+                const text = await res.text();
+                if (text && text.trim()) {
+                    contentEl.innerText = text; // 將 md 內容直接渲染進去
                 } else {
-                    feedback.innerHTML = `${svgWrong} <span>作答錯誤，正確答案為 (${ansKey})</span>`; feedback.classList.add('wrong');
-                    document.getElementById(`label-${index}-${selected.value}`).classList.add('wrong');
+                    contentEl.innerText = "手冊內容為空。";
                 }
             } else {
-                feedback.innerHTML = `${svgWarn} <span>未作答，正確答案為 (${ansKey})</span>`; feedback.classList.add('unanswered');
+                contentEl.innerText = "找不到操作手冊檔案 (data/manual.md)。";
             }
-            document.querySelectorAll(`.opt-group-${index}`).forEach(el => el.onclick = null);
-        });
+        } catch (e) {
+            contentEl.innerText = "無法載入操作手冊，請檢查檔案是否存在。";
+        }
+    }
+
+    function closeManual() {
+        const overlay = document.getElementById('manual-modal-overlay');
+        if (!overlay) return;
         
-        document.getElementById('result-score').innerText = Math.round((score / currentQuiz.length) * 100);
-        document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length}`;
-        stopQuizTimer();
-        showSection('stage-result');
+        // 讓透明度變回 0，並稍微縮小視窗
+        overlay.style.opacity = '0';
+        if (overlay.firstElementChild) {
+            overlay.firstElementChild.style.transform = 'scale(0.9)';
+        }
+        
+        // 等待動畫結束後，真正隱藏它，把螢幕的點擊權限還給使用者
+        setTimeout(() => { 
+            overlay.style.display = 'none'; 
+            overlay.style.visibility = 'hidden'; 
+        }, 250);
     }
 
     // --- 🚀 PWA 依據 Service Worker 變動偵測新版本 ---
@@ -967,9 +1074,14 @@ function stopQuizTimer() {
             if (!overlay || !contentEl || !btnConfirm) return;
 
             // 顯示視窗
-            overlay.style.visibility = 'visible';
             overlay.style.display = 'flex';
-            setTimeout(() => overlay.classList.add('show'), 10);
+            overlay.style.visibility = 'visible';
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                // 確保視窗有縮放彈出的動畫
+                const modalBox = overlay.querySelector('.update-modal');
+                if (modalBox) modalBox.style.transform = 'scale(1)';
+            }, 20);
 
             contentEl.innerText = "發現新版本！系統有全新升級，請點擊下方按鈕進行更新。";
 
