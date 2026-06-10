@@ -1,5 +1,4 @@
-// 版本每次更新記得改
-const CACHE_NAME = 'quiz-reader-cache-v1.7.1.3'; // 建議跟著你的 HTML 版本號走
+const CACHE_NAME = 'quiz-reader-cache-v1.1.0';
 
 const ASSETS_TO_CACHE = [
   'index.html',
@@ -8,8 +7,6 @@ const ASSETS_TO_CACHE = [
 
 // 1. 安裝階段
 self.addEventListener('install', event => {
-  // 🌟 移除這裡的 self.skipWaiting()！
-  // 讓控制權交還給前端 index_2.html 的「立即更新」按鈕 (發送 SKIP_WAITING 訊息)
   
   event.waitUntil(
     caches.open(CACHE_NAME)
