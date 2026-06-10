@@ -180,6 +180,79 @@
     font-size: 15px;
     color: var(--text-secondary);
 }
+/* 懸浮按鈕樣式 */
+.fab-install {
+    position: fixed;
+    bottom: 50px;
+    right: 18px;
+    z-index: 900;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.9); /* 半透明白 */
+    backdrop-filter: blur(10px);         /* 毛玻璃特效 */
+    -webkit-backdrop-filter: blur(10px);
+    border: 0.5px solid rgba(0,0,0,0.1);  /* 極細邊框 */
+    border-radius: 50px;                  /* 膠囊圓角 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    font-size: 14px;
+    font-weight: 500;
+    color: #007aff;                       /* iOS 藍色 */
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.3s ease;
+}
+
+.fab-install:active {
+    transform: scale(0.95);               /* 點擊時輕微縮小 */
+}
+
+/* 在 PWA 模式下隱藏 */
+.hide-in-pwa {
+    display: none !important;
+}
+
+/* 遮罩背景：半透明黑色背景 */
+.ios-modal-overlay {
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    z-index: 9999; 
+    background: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(5px); /* 背景模糊 */
+    align-items: center; 
+    justify-content: center;
+}
+
+/* 視窗本體：毛玻璃特效 + 陰影 */
+.ios-modal-card {
+    background: rgba(255, 255, 255, 0.9); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 24px; 
+    border-radius: 20px; 
+    width: 80%; 
+    max-width: 300px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    text-align: center;
+    border: 0.5px solid rgba(255,255,255,0.8);
+}
+
+/* 按鈕：iOS 藍色實心按鈕 */
+.ios-modal-btn {
+    width: 100%; 
+    padding: 12px; 
+    background: #007aff; 
+    color: white; 
+    border: none; 
+    border-radius: 10px; 
+    font-size: 16px; 
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ios-modal-btn:active {
+    background: #0062cc;
+}
     </style>
 </head>
 <body>
@@ -381,6 +454,18 @@
             </div>
         </div>
     </div>
+	
+	<button id="fab-install-btn" class="fab-install" onclick="showInstallTutorial()">
+    安裝到手機
+</button>
+
+<div id="tutorial-modal" class="ios-modal-overlay" onclick="if(event.target==this) this.style.display='none'">
+    <div class="ios-modal-card">
+        <h3 id="tut-title" style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; text-align: center;">加入主畫面</h3>
+        <div id="tut-content" style="font-size: 14px; color: #3c3c43; line-height: 1.5; margin-bottom: 20px;"></div>
+        <button class="ios-modal-btn" onclick="document.getElementById('tutorial-modal').style.display='none'">我知道了</button>
+    </div>
+</div>
 
 <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1065,6 +1150,7 @@ function stopQuizTimer() {
     }
 
     // 🌟 觸發更新提示
+    // 🌟 觸發更新提示
     async function showUpdatePrompt() {
         try {
             const overlay = document.getElementById('update-modal-overlay');
@@ -1073,22 +1159,22 @@ function stopQuizTimer() {
 
             if (!overlay || !contentEl || !btnConfirm) return;
 
-            // 顯示視窗
+            // 1. 強制解除隱形封印，顯示視窗與動畫
             overlay.style.display = 'flex';
             overlay.style.visibility = 'visible';
             setTimeout(() => {
                 overlay.style.opacity = '1';
-                // 確保視窗有縮放彈出的動畫
                 const modalBox = overlay.querySelector('.update-modal');
                 if (modalBox) modalBox.style.transform = 'scale(1)';
             }, 20);
 
-            contentEl.innerText = "發現新版本！系統有全新升級，請點擊下方按鈕進行更新。";
+            // 2. 顯示讀取中提示
+            contentEl.textContent = "正在連線讀取更新日誌...";
 
-            // 立即更新按鈕
+            // 3. 綁定立即更新按鈕事件
             btnConfirm.onclick = () => {
                 try {
-                    // 💡 安全防線：如果 2 秒內沒反應，強行用修改網址的方式解鎖刷新
+                    // 安全防線：2 秒內沒反應，強行修改網址解鎖刷新
                     setTimeout(() => {
                         const currentHref = window.location.href.split('?')[0];
                         window.location.href = currentHref + '?update=' + Date.now();
@@ -1108,10 +1194,10 @@ function stopQuizTimer() {
                 }
             };
 
-            // 異步讀取日誌
+            // 4. 異步讀取 update_log.md
             try {
                 const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 1000);
+                const id = setTimeout(() => controller.abort(), 1200); // 1.2秒超時防禦
 
                 const res = await fetch('data/update_log.md?t=' + Date.now(), { 
                     cache: 'no-store',
@@ -1121,9 +1207,20 @@ function stopQuizTimer() {
 
                 if (res.ok) {
                     const text = await res.text();
-                    if(text && text.trim()) contentEl.innerText = text;
+                    if (text && text.trim()) {
+                        contentEl.textContent = text; // 安全寫入純文字，防範特殊符號當機
+                        return; // 成功讀取就結束
+                    }
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn("找不到 update_log.md 或讀取超時，載入備用文字");
+            }
+
+            // 🌟 5. 終極防線：如果讀不到檔案，顯示預設更新文字，絕對不讓畫面空白！
+            contentEl.textContent = 
+`發現新版本！系統核心已升級。
+
+請點擊下方「立即更新」以獲取最佳體驗。`;
 
         } catch (globalErr) {}
     }
@@ -1142,6 +1239,48 @@ function stopQuizTimer() {
         } catch(e) {}
     }
     window.onload = initSystem;
+	
+	
+	function showInstallTutorial() {
+    const modal = document.getElementById('tutorial-modal');
+    const title = document.getElementById('tut-title');
+    const content = document.getElementById('tut-content');
+    
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    modal.style.display = 'flex';
+    
+    if (isIOS) {
+        title.innerText = "iPhone 加入主畫面教學";
+        content.innerHTML = `
+            <ol>
+                <li>點擊瀏覽器下方的 <b>「分享」</b> 按鈕 (箭頭圖示)。</li>
+                <li>向下捲動並選擇 <b>「加入主畫面」</b>。</li>
+                <li>點擊右上角的 <b>「加入」</b> 即可。</li>
+            </ol>
+        `;
+    } else {
+        title.innerText = "Android 加入主畫面教學";
+        content.innerHTML = `
+            <ol>
+                <li>點擊瀏覽器右上角的 <b>「⋮」</b> 選單。</li>
+                <li>選擇 <b>「安裝應用程式」</b> 或 <b>「加到主畫面」</b>。</li>
+                <li>點擊 <b>「安裝」</b> 即可。</li>
+            </ol>
+        `;
+    }
+}
+	
+	
+    // 偵測是否已在 PWA 模式執行
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    
+    // 如果是 PWA 模式，直接移除按鈕
+    if (isPWA) {
+        const fab = document.getElementById('fab-install-btn');
+        if (fab) fab.classList.add('hide-in-pwa');
+    }
+
 </script>
 </body>
 </html>
