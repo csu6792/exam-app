@@ -57,11 +57,48 @@ width: 100%;
         .hamburger-btn { background: none; border: none; color: var(--brand-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 101; padding: 4px; }
         .hamburger-btn .svg-icon { width: 24px; height: 24px; }
 
-        .side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
-        .side-menu-overlay.show { opacity: 1; visibility: visible; }
-        .side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--ios-bg); z-index: 1001; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1); touch-action: pan-y; will-change: transform; }
-        .side-menu.show { transform: translateX(280px); }
-        .side-menu-header { padding: 14px 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+        .side-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease;
+
+    will-change: opacity;
+}
+
+.side-menu-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+       .side-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100%;
+    background: var(--ios-bg);
+    z-index: 1001;
+
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.1);
+    touch-action: pan-y;
+
+    transform: translate3d(-100%, 0, 0);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.side-menu.show {
+    transform: translate3d(0, 0, 0);
+}        .side-menu-header { padding: 14px 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
         .side-menu-content { flex: 1; overflow-y: auto; padding: 16px; }
 
         /* --- 🌟 iOS Update Modal (更新提示視窗) --- */
