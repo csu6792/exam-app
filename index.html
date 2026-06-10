@@ -270,7 +270,7 @@
                 <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
         </button>
-        <div class="header-title" id="nav-title">閱讀測驗系統</div>
+        <div class="header-title" id="nav-title">智慧書架</div>
         <div style="width: 28px;"></div>
     </header>
 
@@ -743,7 +743,7 @@ color:var(--brand-primary);
         const navTitle = document.getElementById('nav-title');
         document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         
-        if (tabId === 'reading') { navTitle.innerText = "閱讀測驗系統"; syncAllReadingProgress(); } 
+        if (tabId === 'reading') { navTitle.innerText = "智慧書架"; syncAllReadingProgress(); } 
 		else if(tabId==="analysis"){
 
 navTitle.innerText="測驗分析";
@@ -752,7 +752,7 @@ renderQuizAnalysis();
 renderHistoryList();
 
 }
-        else { navTitle.innerText = "閱讀測驗系統"; restoreQuizActionBar(); }
+        else { navTitle.innerText = "模擬測驗"; restoreQuizActionBar(); }
         document.getElementById('main-content').scrollTo(0, 0);
     }
 
