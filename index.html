@@ -338,34 +338,10 @@
 
     <main id="main-content">
         
-        <!-- Tab 1: 書城區 -->
+        <!-- Tab 1: 書架區 -->
         <div id="tab-content-reading" class="tab-content active">
             <div style="font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; margin: 0 4px 12px; letter-spacing: -0.1px;">我的智慧書架</div>
-            <div class="book-grid">
-                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', '第一科：人工智慧基礎概論')">
-                    <div class="book-cover-wrapper">
-                        <div class="level-badge beginner">初級</div>
-                        <img id="thumb-book1" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
-                        <div id="thumb-prog-1" class="thumb-progress-overlay">0%</div>
-                    </div>
-                    <div class="book-info">
-                        <div class="book-title">第一科：人工智慧基礎概論</div>
-                        <div class="book-status-text book-status-meta" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf">狀態讀取中...</div>
-                    </div>
-                </div>
-
-                <div class="book-card" onclick="openEbook('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', '第二科：生成式 AI 應用與規劃')">
-                    <div class="book-cover-wrapper">
-                        <div class="level-badge beginner">初級</div>
-                        <img id="thumb-book2" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
-                        <div id="thumb-prog-2" class="thumb-progress-overlay">0%</div>
-                    </div>
-                    <div class="book-info">
-                        <div class="book-title">第二科：生成式 AI 應用與規劃</div>
-                        <div class="book-status-text book-status-meta" data-pdfurl="data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf">狀態讀取中...</div>
-                    </div>
-                </div>
-            </div>
+            <div id="dynamic-book-grid" class="book-grid"></div>
         </div>
 
         <!-- Tab 2: 測驗區 -->
@@ -573,55 +549,138 @@
     }
 
     // === 閱讀測驗計時器核心邏輯 ===
-let quizTimerInterval = null;
-let quizStartTime = 0;
-let quizElapsedSeconds = 0;
+	let quizTimerInterval = null;
+	let quizStartTime = 0;
+	let quizElapsedSeconds = 0;
 
-// 1. 啟動計時器（請在您「開始測驗」或「載入題目完成」的 function 最後面加上 startQuizTimer();）
-function startQuizTimer() {
-    const timerBanner = document.getElementById('quiz-timer-banner');
-    const timerDisplay = document.getElementById('quiz-timer-display');
-    
-    quizElapsedSeconds = 0;
-    if (timerDisplay) timerDisplay.innerText = "00:00";
-    if (timerBanner) timerBanner.style.display = 'flex'; // 顯示計時條
-    
-    quizStartTime = Date.now();
-    if (quizTimerInterval) clearInterval(quizTimerInterval);
-    
-    quizTimerInterval = setInterval(() => {
-        const elapsedMs = Date.now() - quizStartTime;
-        quizElapsedSeconds = Math.floor(elapsedMs / 1000);
-        
-        const minutes = Math.floor(quizElapsedSeconds / 60).toString().padStart(2, '0');
-        const seconds = (quizElapsedSeconds % 60).toString().padStart(2, '0');
-        
-        if (timerDisplay) timerDisplay.innerText = `${minutes}:${seconds}`;
-    }, 1000);
-}
+	// 1. 啟動計時器（請在您「開始測驗」或「載入題目完成」的 function 最後面加上 startQuizTimer();）
+	function startQuizTimer() {
+		const timerBanner = document.getElementById('quiz-timer-banner');
+		const timerDisplay = document.getElementById('quiz-timer-display');
+		
+		quizElapsedSeconds = 0;
+		if (timerDisplay) timerDisplay.innerText = "00:00";
+		if (timerBanner) timerBanner.style.display = 'flex'; // 顯示計時條
+		
+		quizStartTime = Date.now();
+		if (quizTimerInterval) clearInterval(quizTimerInterval);
+		
+		quizTimerInterval = setInterval(() => {
+			const elapsedMs = Date.now() - quizStartTime;
+			quizElapsedSeconds = Math.floor(elapsedMs / 1000);
+			
+			const minutes = Math.floor(quizElapsedSeconds / 60).toString().padStart(2, '0');
+			const seconds = (quizElapsedSeconds % 60).toString().padStart(2, '0');
+			
+			if (timerDisplay) timerDisplay.innerText = `${minutes}:${seconds}`;
+		}, 1000);
+	}
 
-// 2. 結束計時器並寫入結果 HTML（請在您「計算分數/顯示結果畫面」的 function 開頭加上 stopQuizTimer();）
-function stopQuizTimer() {
-    if (quizTimerInterval) {
-        clearInterval(quizTimerInterval);
-        quizTimerInterval = null;
-    }
-    
-    // 隱藏頂部計時條
-    const timerBanner = document.getElementById('quiz-timer-banner');
-    if (timerBanner) timerBanner.style.display = 'none';
-    
-    // 計算總時間
-    const minutes = Math.floor(quizElapsedSeconds / 60);
-    const seconds = quizElapsedSeconds % 60;
-    const timeString = `${minutes} 分 ${seconds} 秒`;
-    
-    // 直接寫入第三步建立的 HTML 結果欄位中
-    const timeSpentDisplay = document.getElementById('quiz-time-spent');
-    if (timeSpentDisplay) {
-        timeSpentDisplay.innerText = timeString;
-    }
-}
+	// 2. 結束計時器並寫入結果 HTML（請在您「計算分數/顯示結果畫面」的 function 開頭加上 stopQuizTimer();）
+	function stopQuizTimer() {
+		if (quizTimerInterval) {
+			clearInterval(quizTimerInterval);
+			quizTimerInterval = null;
+		}
+		
+		// 隱藏頂部計時條
+		const timerBanner = document.getElementById('quiz-timer-banner');
+		if (timerBanner) timerBanner.style.display = 'none';
+		
+		// 計算總時間
+		const minutes = Math.floor(quizElapsedSeconds / 60);
+		const seconds = quizElapsedSeconds % 60;
+		const timeString = `${minutes} 分 ${seconds} 秒`;
+		
+		// 直接寫入第三步建立的 HTML 結果欄位中
+		const timeSpentDisplay = document.getElementById('quiz-time-spent');
+		if (timeSpentDisplay) {
+			timeSpentDisplay.innerText = timeString;
+		}
+	}
+
+
+    // 📚 動態讀取書單、渲染 iOS 書卡、並動態生成 PDF 封面縮圖
+	async function loadDynamicBookShelf() {
+		const gridContainer = document.getElementById('dynamic-book-grid'); // 確保與你 HTML 的容器 ID 一致
+		if (!gridContainer) return;
+
+		try {
+			// 1. 抓取雲端書單，加上時間戳防止快取
+			const res = await fetch('data/book_list.md?t=' + Date.now(), { cache: 'no-store' });
+			if (!res.ok) throw new Error("無法取得雲端書單");
+
+			const text = await res.text();
+			const lines = text.split('\n');
+			let htmlHTML = '';
+			let bookIndex = 1;
+			
+			// 🌟 用來暫存每一本書的資訊，等 HTML 渲染完後立刻用來跑 makePdfThumbnail
+			const booksToThumbnail = []; 
+
+			// 2. 逐行解析 book_list.md
+			lines.forEach(line => {
+				const trimmed = line.trim();
+				if (!trimmed || trimmed.startsWith('#')) return; // 略過空白與註解
+
+				const parts = trimmed.split('|');
+				if (parts.length < 3) return; // 確保有 [標籤|書名|檔名] 三個欄位
+
+				const levelBadge = parts[0].trim();  // 例如：初級
+				const bookTitle = parts[1].trim();   // 例如：第一科：人工智慧基礎概論
+				const fileName = parts[2].trim();    // 例如：XXX.pdf
+				const filePath = `data/${fileName}`;
+
+				// 自動根據文字判斷標籤顏色類別
+				let badgeClass = 'beginner';
+				if (levelBadge.includes('中')) badgeClass = 'intermediate';
+				if (levelBadge.includes('高')) badgeClass = 'advanced';
+
+				// 完美還原你原本精緻的 iOS 骨架
+				htmlHTML += `
+					<div class="book-card" onclick="openEbook('${filePath}', '${bookTitle}')">
+						<div class="book-cover-wrapper">
+							<div class="level-badge ${badgeClass}">${levelBadge}</div>
+							<img id="thumb-book-${bookIndex}" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
+							<div id="thumb-prog-${bookIndex}" class="thumb-progress-overlay">0%</div>
+						</div>
+						<div class="book-info">
+							<div class="book-title">${bookTitle}</div>
+							<div class="book-status-text book-status-meta" data-pdfurl="${filePath}">狀態讀取中...</div>
+						</div>
+					</div>
+				`;
+
+				// 🌟 將這本書動態生成的 ID 記錄下來
+				booksToThumbnail.push({
+					filePath: filePath,
+					imgId: `thumb-book-${bookIndex}`,
+					progId: `thumb-prog-${bookIndex}`
+				});
+
+				bookIndex++;
+			});
+
+			// 3. 渲染到網頁上 (將 HTML 結構一次性塞入 DOM)
+			gridContainer.innerHTML = htmlHTML || '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">目前書架上沒有書籍</div>';
+
+			// 🌟 4. 關鍵核心：當 HTML 確實出現在畫面上後，再依序動態觸發 makePdfThumbnail 渲染封面！
+			booksToThumbnail.forEach(book => {
+				if (typeof makePdfThumbnail === 'function') {
+					makePdfThumbnail(book.filePath, book.imgId, book.progId);
+				}
+			});
+
+			// 5. 完美連動原本的 localStorage 狀態刷新功能
+			if (typeof syncAllReadingProgress === 'function') {
+				syncAllReadingProgress();
+			}
+
+		} catch (err) {
+			console.error("動態書架加載失敗:", err);
+			gridContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--status-error);">⚠️ 無法同步雲端書架，請檢查網路連線</div>';
+		}
+	}
 
     // --- Tab 切換 ---
     function switchGlobalTab(tabId) {
@@ -825,33 +884,34 @@ function stopQuizTimer() {
 
     // --- 載入系統初始設定 ---
     async function initSystem() {
-        initTouchGestures(); 
-        syncAllReadingProgress();
+		// 1. 🌟 先動態加載書架（縮圖的渲染已經內建移入此函式中）
+		await loadDynamicBookShelf();
+		
+		// 2. 初始化手勢與同步全域進度
+		initTouchGestures(); 
+		syncAllReadingProgress();
 
-        makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目1_人工智慧基礎概論1141203_20251222172144.pdf', 'thumb-book1', 'thumb-prog-1');
-        makePdfThumbnail('data/AI應用規劃師(初級)-學習指引-科目2_生成式AI應用與規劃114123_20251222172159.pdf', 'thumb-book2', 'thumb-prog-2');
+		// 📝 這裡繼續使用 bank_list.md 來載入「題庫清單」
+		try {
+			const mdResponse = await fetch('data/bank_list.md');
+			if (!mdResponse.ok) throw new Error("Manifest 讀取失敗。");
+			
+			const mdText = await mdResponse.text();
+			const lines = mdText.split('\n');
+			const bankFilesToLoad = [];
+			
+			lines.forEach(line => {
+				let cleanLine = line.trim().replace(/^[\-\*\+]\s+/, '');
+				if (cleanLine && !cleanLine.startsWith('#') && cleanLine.endsWith('.json')) {
+					bankFilesToLoad.push(cleanLine);
+				}
+			});
 
-        // 📝 這裡繼續使用 bank_list.md 來載入「題庫清單」
-        try {
-            const mdResponse = await fetch('data/bank_list.md');
-            if (!mdResponse.ok) throw new Error("Manifest 讀取失敗。");
-            
-            const mdText = await mdResponse.text();
-            const lines = mdText.split('\n');
-            const bankFilesToLoad = [];
-            
-            lines.forEach(line => {
-                let cleanLine = line.trim().replace(/^[\-\*\+]\s+/, '');
-                if (cleanLine && !cleanLine.startsWith('#') && cleanLine.endsWith('.json')) {
-                    bankFilesToLoad.push(cleanLine);
-                }
-            });
+			if (bankFilesToLoad.length === 0) throw new Error("無可用題庫來源。");
+			await loadAllBanks(bankFilesToLoad);
 
-            if (bankFilesToLoad.length === 0) throw new Error("無可用題庫來源。");
-            await loadAllBanks(bankFilesToLoad);
-
-        } catch (error) { console.error(error); }
-    }
+		} catch (error) { console.error(error); }
+	}
 
     async function loadAllBanks(bankFiles) {
         let successCount = 0;
