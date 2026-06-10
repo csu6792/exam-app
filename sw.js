@@ -1,5 +1,5 @@
 // 版本每次更新記得改
-const CACHE_NAME = 'quiz-reader-cache-v1.7.1.1'; // 建議跟著你的 HTML 版本號走
+const CACHE_NAME = 'quiz-reader-cache-v1.7.1.2'; // 建議跟著你的 HTML 版本號走
 
 const ASSETS_TO_CACHE = [
   'index.html',
