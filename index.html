@@ -727,8 +727,108 @@
 			}
 
 		} catch (err) {
-			console.error("動態書架加載失敗:", err);
-			gridContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--status-error);">⚠️ 無法同步雲端書架，請檢查網路連線</div>';
+
+			console.warn(
+				"離線模式，嘗試讀取快取書架:",
+				err
+			);
+
+			try {
+
+				const cacheRes =
+					await caches.match('data/book_list.md');
+
+				if (!cacheRes) {
+					throw new Error("沒有離線書單");
+				}
+
+
+				const text =
+					await cacheRes.text();
+
+
+				// 重新解析快取內容
+				const lines = text.split('\n');
+
+				let htmlHTML = '';
+				let bookIndex = 1;
+
+
+				lines.forEach(line => {
+
+					const trimmed = line.trim();
+
+					if (!trimmed || trimmed.startsWith('#'))
+						return;
+
+
+					const parts = trimmed.split('|');
+
+					if(parts.length < 3)
+						return;
+
+
+					const levelBadge = parts[0].trim();
+					const bookTitle = parts[1].trim();
+					const fileName = parts[2].trim();
+
+					const filePath =
+						`data/${fileName}`;
+
+
+					htmlHTML += `
+					<div class="book-card"
+						onclick="openEbook('${filePath}','${bookTitle}')">
+
+						<div class="book-cover-wrapper">
+
+						<div class="level-badge">
+							${levelBadge}
+						</div>
+
+						<div class="book-cover-img">
+							📖
+						</div>
+
+						</div>
+
+						<div class="book-info">
+							<div class="book-title">
+								${bookTitle}
+							</div>
+						</div>
+
+					</div>
+					`;
+
+					bookIndex++;
+
+				});
+
+
+				gridContainer.innerHTML =
+					htmlHTML ||
+					'<div>沒有離線書籍</div>';
+
+
+				if(typeof syncAllReadingProgress === 'function'){
+					syncAllReadingProgress();
+				}
+
+
+			}
+			catch(e){
+
+				gridContainer.innerHTML =
+				`
+				<div style="padding:20px">
+				⚠️ 尚未開啟過此 App<br>
+				請先連網載入書架
+				</div>
+				`;
+
+			}
+
 		}
 	}
 
