@@ -2,7 +2,10 @@ const CACHE_NAME = 'quiz-reader-cache-v1.2.1';
 
 const ASSETS_TO_CACHE = [
   'index.html',
-  'manifest.json'
+  'manifest.json',
+  'sw.js',
+  'lib/pdf.min.js',
+  'lib/pdf.worker.min.js'
 ];
 
 // 1. 安裝階段
@@ -40,34 +43,75 @@ self.addEventListener('activate', event => {
   );
 });
 
-// 3. 攔截請求 (Fetch) - Network First 策略
+
+// 3. 攔截請求
 self.addEventListener('fetch', event => {
+
   const url = new URL(event.request.url);
 
-  // 🌟 擴充：讓所有 .md 檔 (包含 update_log.md, manual.md, bank_list.md) 都永遠不被 SW 快取
-  // 這樣你只要改了這些文字檔，App 點開絕對是最新內容！
-  if (url.pathname.endsWith('.md')) {
-    event.respondWith(fetch(event.request));
+
+  if (url.origin !== self.location.origin) {
     return;
   }
 
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // 成功取得網路資料，才更新快取
-        if (response.status === 200 && (url.origin === self.location.origin)) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, copy);
-          });
-        }
+
+  // data 類：更新優先
+  if (
+    url.pathname.includes('/data/') ||
+    url.pathname.endsWith('.md') ||
+    url.pathname.endsWith('.json') ||
+    url.pathname.endsWith('.pdf')
+  ) {
+
+    event.respondWith(
+      fetch(event.request)
+      .then(response=>{
+
+        const copy=response.clone();
+
+        caches.open(CACHE_NAME)
+        .then(cache=>{
+          cache.put(event.request,copy);
+        });
+
         return response;
+
       })
-      .catch(() => {
-        // 如果斷網，就從快取拿之前的資料 (離線可用)
+      .catch(()=>{
         return caches.match(event.request);
       })
+    );
+
+    return;
+  }
+
+
+
+  // app 本體：快取優先
+  event.respondWith(
+
+    caches.match(event.request)
+    .then(cacheResponse=>{
+
+      return cacheResponse ||
+      fetch(event.request)
+      .then(response=>{
+
+        const copy=response.clone();
+
+        caches.open(CACHE_NAME)
+        .then(cache=>{
+          cache.put(event.request,copy);
+        });
+
+        return response;
+
+      });
+
+    })
+
   );
+
 });
 
 // 4. 接收前端訊息
