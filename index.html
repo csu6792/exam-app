@@ -736,7 +736,12 @@
 			try {
 
 				const cacheRes =
-					await caches.match('data/book_list.md');
+				 await caches.match(
+				   new Request('data/book_list.md'),
+				   {
+				     ignoreSearch:true
+				   }
+				 );
 
 				if (!cacheRes) {
 					throw new Error("沒有離線書單");
