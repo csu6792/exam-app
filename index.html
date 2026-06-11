@@ -483,7 +483,7 @@
 	
 	<button id="fab-install-btn" class="fab-install" onclick="showInstallTutorial()">
     安裝到手機
-	</button>
+</button>
 
 <div id="tutorial-modal" class="ios-modal-overlay" onclick="if(event.target==this) this.style.display='none'">
     <div class="ios-modal-card">
@@ -648,193 +648,107 @@
 			timeSpentDisplay.innerText = timeString;
 		}
 	}
+	
+	function renderBookCard({ levelBadge, badgeClass, bookTitle, filePath, bookIndex }) {
+	  return `
+		<div class="book-card" onclick="openEbook('${filePath}', '${bookTitle}')">
+		  <div class="book-cover-wrapper">
+			<div class="level-badge ${badgeClass}">${levelBadge}</div>
+
+			<img
+			  id="thumb-book-${bookIndex}"
+			  class="book-cover-img"
+			  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2'><circle cx='12' cy='12' r='10'/></svg>"
+			/>
+
+			<div id="thumb-prog-${bookIndex}" class="thumb-progress-overlay">0%</div>
+		  </div>
+
+		  <div class="book-info">
+			<div class="book-title">${bookTitle}</div>
+			<div class="book-status-text book-status-meta" data-pdfurl="${filePath}">
+			  狀態讀取中...
+			</div>
+		  </div>
+		</div>
+	  `;
+	}
+	
+	function parseBookLines(text) {
+	  return text
+		.split('\n')
+		.map(l => l.trim())
+		.filter(l => l && !l.startsWith('#'))
+		.map(l => {
+		  const [levelBadge, bookTitle, fileName] = l.split('|');
+		  if (!fileName) return null;
+
+		  let badgeClass = 'beginner';
+		  if (levelBadge.includes('中')) badgeClass = 'intermediate';
+		  if (levelBadge.includes('高')) badgeClass = 'advanced';
+
+		  return {
+			levelBadge: levelBadge.trim(),
+			badgeClass,
+			bookTitle: bookTitle.trim(),
+			filePath: `data/${fileName.trim()}`
+		  };
+		})
+		.filter(Boolean);
+	}
 
 
     // 📚 動態讀取書單、渲染 iOS 書卡、並動態生成 PDF 封面縮圖
 	async function loadDynamicBookShelf() {
-		const gridContainer = document.getElementById('dynamic-book-grid'); // 確保與你 HTML 的容器 ID 一致
-		if (!gridContainer) return;
+	  const gridContainer = document.getElementById('dynamic-book-grid');
+	  if (!gridContainer) return;
 
-		try {
-			// 1. 抓取雲端書單，加上時間戳防止快取
-			const res = await fetch('data/book_list.md?t=' + Date.now(), { cache: 'no-store' });
-			if (!res.ok) throw new Error("無法取得雲端書單");
+	  let text;
 
-			const text = await res.text();
-			const lines = text.split('\n');
-			let htmlHTML = '';
-			let bookIndex = 1;
-			
-			// 🌟 用來暫存每一本書的資訊，等 HTML 渲染完後立刻用來跑 makePdfThumbnail
-			const booksToThumbnail = []; 
-
-			// 2. 逐行解析 book_list.md
-			lines.forEach(line => {
-				const trimmed = line.trim();
-				if (!trimmed || trimmed.startsWith('#')) return; // 略過空白與註解
-
-				const parts = trimmed.split('|');
-				if (parts.length < 3) return; // 確保有 [標籤|書名|檔名] 三個欄位
-
-				const levelBadge = parts[0].trim();  // 例如：初級
-				const bookTitle = parts[1].trim();   // 例如：第一科：人工智慧基礎概論
-				const fileName = parts[2].trim();    // 例如：XXX.pdf
-				const filePath = `data/${fileName}`;
-
-				// 自動根據文字判斷標籤顏色類別
-				let badgeClass = 'beginner';
-				if (levelBadge.includes('中')) badgeClass = 'intermediate';
-				if (levelBadge.includes('高')) badgeClass = 'advanced';
-
-				// 完美還原你原本精緻的 iOS 骨架
-				htmlHTML += `
-					<div class="book-card" onclick="openEbook('${filePath}', '${bookTitle}')">
-						<div class="book-cover-wrapper">
-							<div class="level-badge ${badgeClass}">${levelBadge}</div>
-							<img id="thumb-book-${bookIndex}" class="book-cover-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'></line><line x1='12' y1='18' x2='12' y2='22'></line><line x1='4.93' y1='4.93' x2='7.76' y2='7.76'></line><line x1='16.24' y1='16.24' x2='19.07' y2='19.07'></line><line x1='2' y1='12' x2='6' y2='12'></line><line x1='18' y1='12' x2='22' y2='12'></line><line x1='4.93' y1='19.07' x2='7.76' y2='16.24'></line><line x1='16.24' y1='7.76' x2='19.07' y2='4.93'></svg>">
-							<div id="thumb-prog-${bookIndex}" class="thumb-progress-overlay">0%</div>
-						</div>
-						<div class="book-info">
-							<div class="book-title">${bookTitle}</div>
-							<div class="book-status-text book-status-meta" data-pdfurl="${filePath}">狀態讀取中...</div>
-						</div>
-					</div>
-				`;
-
-				// 🌟 將這本書動態生成的 ID 記錄下來
-				booksToThumbnail.push({
-					filePath: filePath,
-					imgId: `thumb-book-${bookIndex}`,
-					progId: `thumb-prog-${bookIndex}`
-				});
-
-				bookIndex++;
-			});
-
-			// 3. 渲染到網頁上 (將 HTML 結構一次性塞入 DOM)
-			gridContainer.innerHTML = htmlHTML || '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">目前書架上沒有書籍</div>';
-
-			// 🌟 4. 關鍵核心：當 HTML 確實出現在畫面上後，再依序動態觸發 makePdfThumbnail 渲染封面！
-			booksToThumbnail.forEach(book => {
-				if (typeof makePdfThumbnail === 'function') {
-					makePdfThumbnail(book.filePath, book.imgId, book.progId);
-				}
-			});
-
-			// 5. 完美連動原本的 localStorage 狀態刷新功能
-			if (typeof syncAllReadingProgress === 'function') {
-				syncAllReadingProgress();
-			}
-
-		} catch (err) {
-
-			console.warn(
-				"離線模式，嘗試讀取快取書架:",
-				err
-			);
-
-			try {
-
-				const cacheRes =
-				 await caches.match(
-				   new Request('data/book_list.md'),
-				   {
-				     ignoreSearch:true
-				   }
-				 );
-
-				if (!cacheRes) {
-					throw new Error("沒有離線書單");
-				}
-
-
-				const text =
-					await cacheRes.text();
-
-
-				// 重新解析快取內容
-				const lines = text.split('\n');
-
-				let htmlHTML = '';
-				let bookIndex = 1;
-
-
-				lines.forEach(line => {
-
-					const trimmed = line.trim();
-
-					if (!trimmed || trimmed.startsWith('#'))
-						return;
-
-
-					const parts = trimmed.split('|');
-
-					if(parts.length < 3)
-						return;
-
-
-					const levelBadge = parts[0].trim();
-					const bookTitle = parts[1].trim();
-					const fileName = parts[2].trim();
-
-					const filePath =
-						`data/${fileName}`;
-
-
-					htmlHTML += `
-					<div class="book-card"
-						onclick="openEbook('${filePath}','${bookTitle}')">
-
-						<div class="book-cover-wrapper">
-
-						<div class="level-badge">
-							${levelBadge}
-						</div>
-
-						<div class="book-cover-img">
-							📖
-						</div>
-
-						</div>
-
-						<div class="book-info">
-							<div class="book-title">
-								${bookTitle}
-							</div>
-						</div>
-
-					</div>
-					`;
-
-					bookIndex++;
-
-				});
-
-
-				gridContainer.innerHTML =
-					htmlHTML ||
-					'<div>沒有離線書籍</div>';
-
-
-				if(typeof syncAllReadingProgress === 'function'){
-					syncAllReadingProgress();
-				}
-
-
-			}
-			catch(e){
-
-				gridContainer.innerHTML =
-				`
-				<div style="padding:20px">
-				⚠️ 尚未開啟過此 App<br>
-				請先連網載入書架
-				</div>
-				`;
-
-			}
-
+	  try {
+		const res = await fetch('data/book_list.md?t=' + Date.now(), { cache: 'no-store' });
+		if (!res.ok) throw new Error();
+		text = await res.text();
+	  } catch (e) {
+		const cacheRes = await caches.match('data/book_list.md');
+		if (!cacheRes) {
+		  gridContainer.innerHTML = '⚠️ 尚未載入過書架';
+		  return;
 		}
+		text = await cacheRes.text();
+	  }
+
+	  const books = parseBookLines(text);
+
+	  let html = '';
+	  const booksToThumbnail = [];
+
+	  books.forEach((book, i) => {
+		const bookIndex = i + 1;
+
+		html += renderBookCard({
+		  ...book,
+		  bookIndex
+		});
+
+		booksToThumbnail.push({
+		  filePath: book.filePath,
+		  imgId: `thumb-book-${bookIndex}`,
+		  progId: `thumb-prog-${bookIndex}`
+		});
+	  });
+
+	  gridContainer.innerHTML = html;
+
+	  booksToThumbnail.forEach(book => {
+		if (typeof makePdfThumbnail === 'function') {
+		  makePdfThumbnail(book.filePath, book.imgId, book.progId);
+		}
+	  });
+
+	  if (typeof syncAllReadingProgress === 'function') {
+		syncAllReadingProgress();
+	  }
 	}
 
     // --- Tab 切換 ---
