@@ -8,6 +8,11 @@ const ASSETS_TO_CACHE = [
   'lib/pdf.worker.min.js'
 ];
 
+function normalizeRequest(request) {
+  const url = new URL(request.url);
+  return new Request(url.origin + url.pathname);
+}
+
 // 1. 安裝階段
 self.addEventListener('install', event => {
   
@@ -71,14 +76,14 @@ self.addEventListener('fetch', event => {
 
         caches.open(CACHE_NAME)
         .then(cache=>{
-          cache.put(event.request,copy);
+          cache.put(normalizeRequest(event.request), copy);
         });
 
         return response;
 
       })
       .catch(()=>{
-        return caches.match(event.request);
+        return caches.match(normalizeRequest(event.request));
       })
     );
 
@@ -101,7 +106,7 @@ self.addEventListener('fetch', event => {
 
         caches.open(CACHE_NAME)
         .then(cache=>{
-          cache.put(event.request,copy);
+          cache.put(normalizeRequest(event.request), copy);
         });
 
         return response;
