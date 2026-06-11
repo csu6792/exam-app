@@ -710,7 +710,10 @@
 		if (!res.ok) throw new Error();
 		text = await res.text();
 	  } catch (e) {
-		const cacheRes = await caches.match('data/book_list.md');
+		const cacheRes = await caches.match(
+		  new Request('data/book_list.md'),
+		  { ignoreSearch: true }
+		);
 		if (!cacheRes) {
 		  gridContainer.innerHTML = '⚠️ 尚未載入過書架';
 		  return;
