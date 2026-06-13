@@ -305,10 +305,31 @@
 					<div style="font-size: 14px; font-weight: 500;">v1.3.0</div>
 				</div>
             </div>
-			<button class="btn-action btn-secondary" onclick="openManual()" style="box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 0.5px solid var(--border-light);">
-                <svg class="svg-icon" viewBox="0 0 24 24" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                <span>查看操作手冊</span>
-            </button>
+			<button class="btn-action btn-secondary" onclick="openManual()" style="
+		    width: 100%;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    gap: 8px;
+		    padding: 12px;
+		    background: #ffffff;
+		    border: 1px solid var(--border-light, #e2e8f0);
+		    border-radius: 12px;
+		    color: var(--text-primary, #334155);
+		    font-size: 14px;
+		    font-weight: 500;
+		    cursor: pointer;
+		    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+		    transition: all 0.2s ease;
+		" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='var(--border-light, #e2e8f0)';" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+		    
+		    <svg class="svg-icon" viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;">
+		        <circle cx="12" cy="12" r="10"></circle>
+		        <line x1="12" y1="16" x2="12" y2="12"></line>
+		        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+		    </svg>
+		    <span>查看操作手冊</span>
+		</button>
         </div>
     </div>
 	
