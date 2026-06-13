@@ -523,11 +523,142 @@
     </div>
 </div>
 
+<div id="submit-modal" 
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.35);
+z-index:9999;
+align-items:center;
+justify-content:center;
+">
+
+<div style="
+width:320px;
+background:white;
+border-radius:20px;
+padding:24px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+text-align:center;
+">
+
+<h3 style="margin-top:0;">
+確認送出
+</h3>
+
+
+<div id="submit-modal-text"
+style="
+color:#666;
+line-height:1.6;
+margin:20px 0;
+">
+</div>
+
+
+<div style="
+display:flex;
+gap:12px;
+">
+
+<button
+onclick="closeSubmitModal()"
+style="
+flex:1;
+padding:12px;
+border:none;
+border-radius:12px;
+background:#eee;
+">
+取消
+</button>
+
+
+<button
+onclick="confirmSubmitQuiz()"
+style="
+flex:1;
+padding:12px;
+border:none;
+border-radius:12px;
+background:var(--brand-primary);
+color:white;
+">
+確定送出
+</button>
+
+
+</div>
+
+</div>
+</div>
+
+
+<div id="timeout-modal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.35);
+z-index:9999;
+align-items:center;
+justify-content:center;
+">
+
+<div style="
+width:320px;
+background:white;
+border-radius:20px;
+padding:24px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+text-align:center;
+">
+
+<h3 style="margin-top:0;">
+測驗時間結束
+</h3>
+
+
+<div style="
+color:#666;
+margin:20px 0;
+line-height:1.6;
+">
+測驗時間已到<br>
+系統將自動送出答案
+</div>
+
+
+<button
+onclick="confirmTimeoutSubmit()"
+style="
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+background:var(--brand-primary);
+color:white;
+">
+確定
+</button>
+
+
+</div>
+</div>
+
 <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdf.worker.min.js';
 
     let loadedBanks = {}; 
-    let currentQuiz = []; 
+    let currentQuiz = [];
+	let markedQuestions = [];
 	let passScore = parseInt(localStorage.getItem("pass_score") || "70");
     let activeGlobalTab = 'reading'; 
     let activeQuizSection = 'stage-loading'; 
@@ -702,12 +833,14 @@
 
 				quizTimerInterval=null;
 
-				alert("測驗時間結束");
 
 				stopQuizTimer();
 
-				// 自動交卷
-				submitQuiz();
+
+				document.getElementById(
+					"timeout-modal"
+				).style.display="flex";
+
 
 				return;
 			}
@@ -732,6 +865,18 @@
 
 
 		},1000);
+
+	}
+	
+	function confirmTimeoutSubmit(){
+
+		document.getElementById(
+			"timeout-modal"
+		).style.display="none";
+
+
+		// 直接結算，不再跳標記確認
+		finishQuiz();
 
 	}
 
@@ -1217,6 +1362,7 @@
         count = Math.min(count, questionPool.length);
         
         currentQuiz = [...questionPool].sort(() => Math.random() - 0.5).slice(0, count);
+		markedQuestions = [];
         renderQuiz(); showSection('stage-quiz');
     }
 
@@ -1248,8 +1394,41 @@
 					<span>${q.category || q.sourceBank}</span>
 					<span style="color:var(--text-muted);">REF: ${q.id || 'N/A'}</span>
 				</div>
-				<div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; line-height: 1.4;">
-					<span style="color: var(--brand-primary); margin-right: 4px;">${index + 1}.</span>${q.question}
+				<div style="
+				display:flex;
+				justify-content:space-between;
+				align-items:flex-start;
+				gap:10px;
+				margin-bottom:16px;
+				">
+
+					<div style="
+					font-size:16px;
+					font-weight:600;
+					line-height:1.4;
+					flex:1;
+					">
+						<span style="color: var(--brand-primary); margin-right: 4px;">
+							${index + 1}.
+						</span>
+						${q.question}
+					</div>
+
+					<button
+						type="button"
+						id="mark-btn-${index}"
+						onclick="toggleMark(${index})"
+						style="
+							border:none;
+							border-radius:8px;
+							padding:6px 10px;
+							cursor:pointer;
+							background:#f2f2f7;
+							font-size:12px;
+						">
+						標記
+					</button>
+
 				</div>
 				<div>${optionsHtml}</div>
 				<div id="feedback-${index}" class="status-banner"></div>
@@ -1262,6 +1441,38 @@
 			container.appendChild(card);
 		});
 		startQuizTimer();
+	}
+	
+	function toggleMark(index){
+
+		const btn =
+		document.getElementById(
+			`mark-btn-${index}`
+		);
+
+		if(markedQuestions.includes(index)){
+
+			markedQuestions =
+			markedQuestions.filter(
+				x => x !== index
+			);
+
+			btn.innerText = "標記";
+
+			btn.style.background =
+			"#f2f2f7";
+
+		}else{
+
+			markedQuestions.push(index);
+
+			btn.innerText = "已標記";
+
+			btn.style.background =
+			"#fff3cd";
+
+		}
+
 	}
 
 	function saveQuizHistory(){
@@ -1464,8 +1675,10 @@
 
 
 		}
+		
+		
+	function finishQuiz(){
 
-    function submitQuiz() {
 		let score = 0;
 		currentQuiz.forEach((q, index) => {
 			const selected = document.querySelector(`input[name="q${index}"]:checked`);
@@ -1504,6 +1717,55 @@
 		stopQuizTimer();
 		saveQuizHistory();
 		showSection('stage-result');
+
+	}
+
+    function submitQuiz() {
+	
+		 // === 檢查標記題 ===
+		if(markedQuestions.length>0){
+
+			const list =
+			markedQuestions
+			.map(i=>i+1)
+			.join("、");
+
+
+			document.getElementById(
+			"submit-modal-text"
+			).innerHTML =
+			`
+			尚有 <b>${markedQuestions.length}</b> 題標記未確認<br><br>
+			第 ${list} 題
+			`;
+
+
+			document.getElementById(
+			"submit-modal"
+			).style.display="flex";
+
+
+			return;
+		}
+		finishQuiz();
+		
+	}
+	
+	function confirmSubmitQuiz(){
+
+		closeSubmitModal();
+
+		finishQuiz();
+
+	}
+
+
+	function closeSubmitModal(){
+
+		document.getElementById(
+		"submit-modal"
+		).style.display="none";
+
 	}
 	
 	// --- 📖 操作手冊開關與讀取邏輯 ---
