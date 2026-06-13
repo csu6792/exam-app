@@ -305,30 +305,56 @@
 					<div style="font-size: 14px; font-weight: 500;">v1.3.0</div>
 				</div>
             </div>
-			<button class="btn-action btn-secondary" onclick="openManual()" style="
-		    width: 100%;
-		    display: flex;
-		    align-items: center;
-		    justify-content: center;
-		    gap: 6px;
-		    padding: 10px;
-		    background: rgba(0, 122, 255, 0.05);
-		    border: none;
-		    border-radius: 8px;
-		    color: var(--brand-primary, #007aff);
-		    font-size: 14px;
-		    font-weight: 600;
-		    cursor: pointer;
-		    transition: all 0.2s ease;
-		" onmouseover="this.style.background='rgba(0, 122, 255, 0.1)';" onmouseout="this.style.background='rgba(0, 122, 255, 0.05)';" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-		    
-		    <svg class="svg-icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
-		        <circle cx="12" cy="12" r="10"></circle>
-		        <line x1="12" y1="16" x2="12" y2="12"></line>
-		        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-		    </svg>
-		    <span>查看操作手冊</span>
-		</button>
+			
+			<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+                
+                <button class="btn-action btn-secondary" onclick="openManual()" style="
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    padding: 10px;
+                    background: rgba(0, 122, 255, 0.05);
+                    border: none;
+                    border-radius: 8px;
+                    color: var(--brand-primary, #007aff);
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(0, 122, 255, 0.1)';" onmouseout="this.style.background='rgba(0, 122, 255, 0.05)';" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                    <svg class="svg-icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>查看操作手冊</span>
+                </button>
+
+                <button class="btn-action btn-secondary" onclick="checkUpdates()" style="
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    padding: 10px;
+                    background: rgba(0, 122, 255, 0.05);
+                    border: none;
+                    border-radius: 8px;
+                    color: var(--brand-primary, #007aff);
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(0, 122, 255, 0.1)';" onmouseout="this.style.background='rgba(0, 122, 255, 0.05)';" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                    <svg class="svg-icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                    </svg>
+                    <span>查看更新</span>
+                </button>
+
+            </div>
         </div>
     </div>
 	
@@ -341,6 +367,19 @@
             </div>
             <div style="display: flex; border-top: 0.5px solid var(--border-light);">
                 <button class="btn-update-action" onclick="closeManual()" style="font-weight: 600; width: 100%; flex: 1; padding: 14px; background: none; border: none; font-size: 17px; color: var(--brand-primary); cursor: pointer;">我知道了</button>
+            </div>
+        </div>
+    </div>
+	
+	<div id="manual-modal-overlay_up" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease;">
+        <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); width: 85%; max-width: 320px; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);">
+            <div style="padding: 20px 16px 16px; text-align: center;">
+                <div style="font-size: 17px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.4px;">更新日誌</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.4;">歡迎使用本系統，以下為更新日誌：</div>
+                <div id="manual-md-content_up" style="background: rgba(0,0,0,0.04); border-radius: 8px; padding: 12px; font-size: 13px; color: var(--text-primary); text-align: left; max-height: 240px; overflow-y: auto; font-family: inherit; white-space: pre-wrap; line-height: 1.6; border: 0.5px solid var(--border-light);">正在讀取操作手冊...</div>
+            </div>
+            <div style="display: flex; border-top: 0.5px solid var(--border-light);">
+                <button class="btn-update-action" onclick="closeManual_up()" style="font-weight: 600; width: 100%; flex: 1; padding: 14px; background: none; border: none; font-size: 17px; color: var(--brand-primary); cursor: pointer;">我知道了</button>
             </div>
         </div>
     </div>
@@ -1834,9 +1873,72 @@ color:white;
             contentEl.innerText = "無法載入操作手冊，請檢查檔案是否存在。";
         }
     }
+	
+	async function checkUpdates() {
+        // 1. 先把漢堡選單收起來
+        toggleMenu();
+
+        const overlay = document.getElementById('manual-modal-overlay_up');
+        const contentEl = document.getElementById('manual-md-content_up');
+        if (!overlay || !contentEl) return;
+
+        // 2. 彈出 iOS 視窗
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            if (overlay.firstElementChild) {
+                overlay.firstElementChild.style.transform = 'scale(1)';
+            }
+        }, 20);
+
+        contentEl.innerText = "正在讀取操作手冊...";
+
+        // 3. 異步讀取指定的 md 檔案 (假設路徑放在 data/update_log.md)
+        try {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 1500); // 1.5秒超時防禦
+
+            const res = await fetch('data/update_log.md?t=' + Date.now(), { 
+                cache: 'no-store',
+                signal: controller.signal 
+            });
+            clearTimeout(id);
+
+            if (res.ok) {
+                const text = await res.text();
+                if (text && text.trim()) {
+                    contentEl.innerText = text; // 將 md 內容直接渲染進去
+                } else {
+                    contentEl.innerText = "手冊內容為空。";
+                }
+            } else {
+                contentEl.innerText = "找不到操作手冊檔案 (data/update_log.md)。";
+            }
+        } catch (e) {
+            contentEl.innerText = "無法載入操作手冊，請檢查檔案是否存在。";
+        }
+    }
 
     function closeManual() {
         const overlay = document.getElementById('manual-modal-overlay');
+        if (!overlay) return;
+        
+        // 讓透明度變回 0，並稍微縮小視窗
+        overlay.style.opacity = '0';
+        if (overlay.firstElementChild) {
+            overlay.firstElementChild.style.transform = 'scale(0.9)';
+        }
+        
+        // 等待動畫結束後，真正隱藏它，把螢幕的點擊權限還給使用者
+        setTimeout(() => { 
+            overlay.style.display = 'none'; 
+            overlay.style.visibility = 'hidden'; 
+        }, 250);
+    }
+	
+	function closeManual_up() {
+        const overlay = document.getElementById('manual-modal-overlay_up');
         if (!overlay) return;
         
         // 讓透明度變回 0，並稍微縮小視窗
@@ -2031,6 +2133,7 @@ color:white;
         `;
     }
 }
+	
 	
     // 偵測是否已在 PWA 模式執行
     const isPWA = window.matchMedia('(display-mode: standalone)').matches;
