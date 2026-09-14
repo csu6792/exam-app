@@ -479,7 +479,29 @@
             </div>
         </div>
 
-		<!-- Tab 3: 測驗分析 -->
+		<!-- Tab 3: 錯題本 -->
+		<div id="tab-content-wrong" class="tab-content">
+			<div class="app-card">
+				<div class="card-title">錯題本</div>
+				<div style="font-size:14px;color:var(--text-secondary);margin-top:4px;margin-bottom:12px;">
+					自動記錄答錯或未作答的題目，最多保留 <b>50</b> 題（超過會移除最舊的）。
+				</div>
+				<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+					<div style="font-size:15px;font-weight:600;">
+						目前共有 <span id="wrong-count" style="color:var(--status-error);">0</span> 題
+					</div>
+					<button type="button" onclick="clearWrongBook()" style="border:none;background:none;color:var(--status-error);font-size:13px;font-weight:500;cursor:pointer;">清空全部</button>
+				</div>
+			</div>
+			<div class="app-card" style="padding:12px 16px;">
+				<button class="btn-action" id="btn-practice-wrong" onclick="startWrongPractice()" style="margin-bottom:0;">
+					練習全部錯題
+				</button>
+			</div>
+			<div id="wrong-list-container" style="margin-top:8px;"></div>
+		</div>
+
+		<!-- Tab 4: 測驗分析 -->
 		<div id="tab-content-analysis" class="tab-content">
 
 			<div class="app-card">
@@ -535,6 +557,10 @@
         <div class="tab-item" id="tab-btn-quiz" onclick="switchGlobalTab('quiz')">
             <svg class="tab-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
             <span class="tab-label">模擬測驗</span>
+        </div>
+        <div class="tab-item" id="tab-btn-wrong" onclick="switchGlobalTab('wrong')">
+            <svg class="tab-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span class="tab-label">錯題本</span>
         </div>
 		<div class="tab-item" id="tab-btn-analysis" onclick="switchGlobalTab('analysis')">
     <svg class="tab-icon" viewBox="0 0 24 24">
@@ -721,6 +747,9 @@ color:white;
 	let passScore = parseInt(localStorage.getItem("pass_score") || "70");
     let activeGlobalTab = 'reading'; 
     let activeQuizSection = 'stage-loading'; 
+    let isWrongPracticeMode = false; // 是否正在練習錯題本
+    const WRONG_BOOK_MAX = 50;
+    const WRONG_STORAGE_KEY = 'wrong_questions';
 
     let currentPdfDoc = null;
     let currentPdfPage = 1;
@@ -1094,16 +1123,20 @@ color:white;
         const navTitle = document.getElementById('nav-title');
         document.querySelectorAll('.bottom-nav').forEach(el => el.style.display = 'none');
         
-        if (tabId === 'reading') { navTitle.innerText = "智慧書架"; syncAllReadingProgress(); } 
-		else if(tabId==="analysis"){
-
-		navTitle.innerText="測驗分析";
-
-		renderQuizAnalysis();
-		renderHistoryList();
-
-		}
-        else { navTitle.innerText = "模擬測驗"; restoreQuizActionBar(); }
+        if (tabId === 'reading') { 
+            navTitle.innerText = "智慧書架"; 
+            syncAllReadingProgress(); 
+        } else if (tabId === "analysis") {
+            navTitle.innerText = "測驗分析";
+            renderQuizAnalysis();
+            renderHistoryList();
+        } else if (tabId === "wrong") {
+            navTitle.innerText = "錯題本";
+            renderWrongBook();
+        } else { 
+            navTitle.innerText = "模擬測驗"; 
+            restoreQuizActionBar(); 
+        }
         document.getElementById('main-content').scrollTo(0, 0);
     }
 
@@ -1422,6 +1455,7 @@ color:white;
         
         currentQuiz = [...questionPool].sort(() => Math.random() - 0.5).slice(0, count);
 		markedQuestions = [];
+		isWrongPracticeMode = false;
         renderQuiz(); showSection('stage-quiz');
     }
 
@@ -1736,9 +1770,132 @@ color:white;
 		}
 		
 		
+	// ========== 錯題本核心邏輯 ==========
+	function getWrongKey(q) {
+		// 產生唯一識別碼（優先用 id，否則用題目文字）
+		return (q.sourceBank || '') + '|' + (q.id || '') + '|' + (q.question || '').slice(0, 80);
+	}
+
+	function loadWrongBook() {
+		try {
+			return JSON.parse(localStorage.getItem(WRONG_STORAGE_KEY) || '[]');
+		} catch (e) {
+			return [];
+		}
+	}
+
+	function saveWrongBook(list) {
+		// 最多 50 題，超過從最舊的開始移除（list 前端是最新）
+		if (list.length > WRONG_BOOK_MAX) {
+			list = list.slice(0, WRONG_BOOK_MAX);
+		}
+		localStorage.setItem(WRONG_STORAGE_KEY, JSON.stringify(list));
+	}
+
+	function addToWrongBook(wrongQs) {
+		if (!wrongQs || wrongQs.length === 0) return;
+		let book = loadWrongBook();
+		const existingKeys = new Set(book.map(getWrongKey));
+
+		// 新錯題放最前面（最新）
+		wrongQs.forEach(q => {
+			const key = getWrongKey(q);
+			if (!existingKeys.has(key)) {
+				// 只存必要欄位，避免 localStorage 過大
+				book.unshift({
+					id: q.id || null,
+					question: q.question,
+					options: q.options,
+					answer: q.answer,
+					explanation: q.explanation || null,
+					category: q.category || null,
+					sourceBank: q.sourceBank || null,
+					addedAt: new Date().toISOString()
+				});
+				existingKeys.add(key);
+			}
+		});
+		saveWrongBook(book);
+	}
+
+	function removeFromWrongBookByKeys(keysToRemove) {
+		if (!keysToRemove || keysToRemove.length === 0) return;
+		const keySet = new Set(keysToRemove);
+		let book = loadWrongBook().filter(q => !keySet.has(getWrongKey(q)));
+		saveWrongBook(book);
+	}
+
+	function clearWrongBook() {
+		if (!confirm('確定要清空全部錯題嗎？此操作無法復原。')) return;
+		localStorage.removeItem(WRONG_STORAGE_KEY);
+		renderWrongBook();
+	}
+
+	function renderWrongBook() {
+		const book = loadWrongBook();
+		const countEl = document.getElementById('wrong-count');
+		const listEl = document.getElementById('wrong-list-container');
+		const btn = document.getElementById('btn-practice-wrong');
+		if (countEl) countEl.innerText = book.length;
+		if (btn) {
+			btn.disabled = book.length === 0;
+			btn.style.opacity = book.length === 0 ? '0.5' : '1';
+			btn.innerText = book.length === 0 ? '目前沒有錯題' : `練習全部錯題（${book.length} 題）`;
+		}
+		if (!listEl) return;
+		if (book.length === 0) {
+			listEl.innerHTML = `<div class="app-card" style="text-align:center;color:var(--text-secondary);font-size:14px;">尚未累積任何錯題<br>完成模擬測驗後，答錯或未作答的題目會自動加入此處。</div>`;
+			return;
+		}
+		listEl.innerHTML = book.map((q, i) => {
+			const shortQ = (q.question || '').length > 60 ? (q.question.slice(0, 60) + '…') : (q.question || '');
+			return `
+			<div class="app-card" style="padding:12px 14px;margin-bottom:10px;">
+				<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+					<div style="flex:1;">
+						<div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">
+							${q.category || q.sourceBank || '未知來源'} · ${q.id ? 'REF: ' + q.id : ''}
+						</div>
+						<div style="font-size:14px;font-weight:500;line-height:1.4;">${shortQ}</div>
+					</div>
+					<button type="button" onclick="removeSingleWrong(${i})" style="border:none;background:#fff5f5;color:var(--status-error);border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">移除</button>
+				</div>
+			</div>`;
+		}).join('');
+	}
+
+	function removeSingleWrong(index) {
+		let book = loadWrongBook();
+		if (index < 0 || index >= book.length) return;
+		book.splice(index, 1);
+		saveWrongBook(book);
+		renderWrongBook();
+	}
+
+	function startWrongPractice() {
+		const book = loadWrongBook();
+		if (book.length === 0) {
+			alert('目前沒有錯題可練習。');
+			return;
+		}
+		isWrongPracticeMode = true;
+		currentQuiz = book.map(q => ({...q}));
+		markedQuestions = [];
+		// 切換到模擬測驗分頁並直接開始答題
+		switchGlobalTab('quiz');
+		renderQuiz();
+		showSection('stage-quiz');
+		// 更新標題提示
+		const header = document.getElementById('quiz-header');
+		if (header) header.innerText = `錯題練習 · 共 ${currentQuiz.length} 題`;
+	}
+
 	function finishQuiz(){
 
 		let score = 0;
+		const wrongInThisQuiz = [];
+		const correctKeysInWrongMode = [];
+
 		currentQuiz.forEach((q, index) => {
 			const selected = document.querySelector(`input[name="q${index}"]:checked`);
 			const feedback = document.getElementById(`feedback-${index}`);
@@ -1752,17 +1909,31 @@ color:white;
 			const svgWrong = `<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
 			const svgWarn = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
 
+			let isCorrect = false;
 			if (selected) {
 				if (selected.value === ansKey) {
-					score++; feedback.innerHTML = `${svgCorrect} <span>答題正確</span>`; feedback.classList.add('correct');
+					score++; 
+					isCorrect = true;
+					feedback.innerHTML = `${svgCorrect} <span>答題正確</span>`; 
+					feedback.classList.add('correct');
 				} else {
-					feedback.innerHTML = `${svgWrong} <span>作答錯誤，正確答案為 (${ansKey})</span>`; feedback.classList.add('wrong');
+					feedback.innerHTML = `${svgWrong} <span>作答錯誤，正確答案為 (${ansKey})</span>`; 
+					feedback.classList.add('wrong');
 					document.getElementById(`label-${index}-${selected.value}`).classList.add('wrong');
 				}
 			} else {
-				feedback.innerHTML = `${svgWarn} <span>未作答，正確答案為 (${ansKey})</span>`; feedback.classList.add('unanswered');
+				feedback.innerHTML = `${svgWarn} <span>未作答，正確答案為 (${ansKey})</span>`; 
+				feedback.classList.add('unanswered');
 			}
 			
+			// 收集錯題（含未作答）
+			if (!isCorrect) {
+				wrongInThisQuiz.push(q);
+			} else if (isWrongPracticeMode) {
+				// 在錯題練習模式中答對 → 從錯題本移除
+				correctKeysInWrongMode.push(getWrongKey(q));
+			}
+
 			// 🌟 核心修改：提交後不論對錯，皆秀出解析
 			if (explanationBox) {
 				explanationBox.style.display = 'block';
@@ -1770,6 +1941,15 @@ color:white;
 
 			document.querySelectorAll(`.opt-group-${index}`).forEach(el => el.onclick = null);
 		});
+		
+		// 寫入錯題本（一般測驗或練習中仍答錯的）
+		addToWrongBook(wrongInThisQuiz);
+
+		// 若是錯題練習模式，把這次答對的題目從錯題本移除
+		if (isWrongPracticeMode && correctKeysInWrongMode.length > 0) {
+			removeFromWrongBookByKeys(correctKeysInWrongMode);
+		}
+		isWrongPracticeMode = false;
 		
 		document.getElementById('result-score').innerText = Math.round((score / currentQuiz.length) * 100);
 		document.getElementById('result-details').innerText = `正確率：${score} / ${currentQuiz.length}`;
