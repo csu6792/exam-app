@@ -29,17 +29,17 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: var(--ios-bg); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif; background-color: var(--ios-bg); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
-        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border-light); z-index: 100; flex-shrink: 0; position: relative; }
+        header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--border-light); z-index: 200; flex-shrink: 0; position: relative; }
         .header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.4px; position: absolute; left: 50%; transform: translateX(-50%); }
-        .hamburger-btn { background: none; border: none; color: var(--brand-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 101; padding: 4px; }
+        .hamburger-btn { background: none; border: none; color: var(--brand-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 201; padding: 4px; position: relative; }
         .hamburger-btn .svg-icon { width: 24px; height: 24px; }
 
         .side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
         .side-menu-overlay.show { opacity: 1; visibility: visible; }
-        .side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--ios-bg); z-index: 1001; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1); }
-        .side-menu.show { transform: translateX(280px); }
+        .side-menu { position: fixed; top: 0; left: 0; width: 280px; height: 100%; background: var(--ios-bg); z-index: 1001; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; box-shadow: 4px 0 16px rgba(0,0,0,0.1); will-change: transform; }
+        .side-menu.show { transform: translateX(0); }
         .side-menu-header { padding: 14px 16px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
         .side-menu-content { flex: 1; overflow-y: auto; padding: 16px; }
 
@@ -68,7 +68,7 @@
         .btn-update-action:active { background: rgba(0,0,0,0.05); }
         .btn-update-confirm { font-weight: 600; border-left: 0.5px solid var(--border-light); }
 
-        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(140px + env(safe-area-inset-bottom)); scroll-behavior: smooth; }
+        main { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 16px; padding-bottom: calc(140px + env(safe-area-inset-bottom)); scroll-behavior: smooth; }
         .tab-content { display: none; } .tab-content.active { display: block; }
 
         .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; padding: 8px 4px; }
@@ -167,7 +167,7 @@
 			border-bottom: 1px solid var(--ios-sub-bg);
 			position: sticky;
 			top: 0;
-			z-index: 999;
+			z-index: 50;
 			box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 			display: none; /* 預設隱藏，開始測驗才顯示 */
 			align-items: center;
@@ -758,9 +758,19 @@ color:white;
     let currentZoomScale = 1.0;
 
     // --- 🍔 選單 ---
+    function closeSideMenu() {
+        const menu = document.getElementById('side-menu');
+        const overlay = document.getElementById('side-menu-overlay');
+        if (menu) menu.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+    }
     function toggleMenu() {
-        document.getElementById('side-menu').classList.toggle('show');
-        document.getElementById('side-menu-overlay').classList.toggle('show');
+        const menu = document.getElementById('side-menu');
+        const overlay = document.getElementById('side-menu-overlay');
+        if (!menu || !overlay) return;
+        const willShow = !menu.classList.contains('show');
+        menu.classList.toggle('show', willShow);
+        overlay.classList.toggle('show', willShow);
     }
 
     // --- ✌️ 雙指縮放 (Pinch-to-Zoom) 與滑動翻頁整合 ---
@@ -1891,6 +1901,8 @@ color:white;
 	}
 
 	function finishQuiz(){
+		// 答題結束後強制關閉側邊選單，避免定位跑版 / 漢堡選單消失
+		closeSideMenu();
 
 		let score = 0;
 		const wrongInThisQuiz = [];
