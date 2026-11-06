@@ -2327,12 +2327,13 @@ color:white;
                 return;
             }
 
-            mqttClient = mqtt.connect('ws://mqttgo.io:8000/mqtt', {
+            // 官方 mqttgo.io 預設 WSS 埠為 8084（舊教學的 8000/ws 已不可用，且 HTTPS 頁面會封鎖 ws://）
+            mqttClient = mqtt.connect('wss://mqttgo.io:8084/mqtt', {
                 clientId: myMqttClientId,
                 clean: true,
                 keepalive: 60,
                 reconnectPeriod: 15000,
-                connectTimeout: 8000,
+                connectTimeout: 10000,
                 will: {
                     topic: MQTT_ONLINE_TOPIC,
                     payload: '',
@@ -2343,6 +2344,10 @@ color:white;
 
             mqttClient.on('connect', function () {
                 try {
+                    // 先把自己加入本地計數，避免短暫顯示 0
+                    onlineClients.add(myMqttClientId);
+                    updateOnlineDisplay();
+
                     mqttClient.subscribe(MQTT_ONLINE_WILDCARD, { qos: 0 });
                     // 宣告自己上線（retain，讓其他人看到）
                     mqttClient.publish(MQTT_ONLINE_TOPIC, String(Date.now()), { retain: true, qos: 0 });
@@ -2372,9 +2377,7 @@ color:white;
             });
 
             mqttClient.on('error', function () {
-                // 連線失敗不報錯，顯示 0
-                onlineClients.clear();
-                updateOnlineDisplay();
+                // 連線失敗不報錯，不強制清零（避免重連時閃爍）
             });
 
             mqttClient.on('close', function () {
