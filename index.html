@@ -659,6 +659,14 @@
 						<span id="ipas-notice-id">身分證統一編號 A243</span>
 						<span id="ipas-notice-name">姓名 A243</span>
 					</div>
+					<!-- 題庫選擇區 -->
+					<div style="background:#fff; border:1px solid #ccc; padding:12px; margin-bottom:12px;">
+						<div style="font-size:13px; font-weight:700; margin-bottom:8px;">選擇考試題庫（可複選）</div>
+						<div id="ipas-bank-list" style="display:flex; flex-direction:column; gap:6px; max-height:140px; overflow-y:auto;"></div>
+						<div style="font-size:12px; color:#555; margin-top:8px;">
+							已選題數上限：<span id="ipas-selected-count">0</span> 題（正式考試預設抽 50 題）
+						</div>
+					</div>
 					<div class="ipas-notice-body" id="ipas-notice-text">
 						一、本試卷試題，為單科試卷，含單選題與複選題，共50題，共佔100%，每題2分（答錯不倒扣），總分共計100分，測驗時間75分鐘。<br><br>
 						二、本試題 0 為阿拉伯數字，O 為英文字母，作答時請先確認。<br><br>
@@ -668,7 +676,7 @@
 					<div class="ipas-notice-footer">
 						<button class="ipas-btn ipas-btn-primary" onclick="ipasStartExam()">開始</button>
 					</div>
-					<div class="ipas-hint">登入完成後，請確認考試科目無誤，並請仔細閱讀注意事項。閱讀完成後請點按開始按鈕，即可進行本次考試。</div>
+					<div class="ipas-hint">登入完成後，請勾選要考的題庫，確認考試科目無誤，並請仔細閱讀注意事項。閱讀完成後請點按開始按鈕，即可進行本次考試。</div>
 				</div>
 			</div>
 
@@ -2616,15 +2624,77 @@ color:white;
         document.getElementById('ipas-notice-name').innerText = '姓名 ' + id;
         document.getElementById('ipas-exam-id').innerText = id + ' / ' + id;
 
-        // 使用已載入的題庫
-        let pool = [];
-        for (const [name, qs] of Object.entries(loadedBanks)) {
-            pool = pool.concat(qs.map(q => ({...q, sourceBank: name})));
-        }
-        if (pool.length === 0) {
+        if (Object.keys(loadedBanks).length === 0) {
             alert('尚無題庫資料，請先至「模擬測驗」頁確認題庫已載入。');
             return;
         }
+
+        // 渲染題庫選擇清單（預設全部勾選）
+        ipasRenderBankList();
+        ipasUpdateSelectedCount();
+
+        // 更新科目顯示（先用第一個題庫名稱）
+        const firstBank = Object.keys(loadedBanks)[0] || '考試科目';
+        document.getElementById('ipas-notice-subject').innerText = '[科目] ' + firstBank;
+        const sel = document.getElementById('ipas-subject-select');
+        if (sel) {
+            sel.innerHTML = `<option value="">[科目] ${firstBank}</option>`;
+        }
+        ipasShowStage('notice');
+    }
+
+    function ipasRenderBankList() {
+        const listEl = document.getElementById('ipas-bank-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+        for (const [name, questions] of Object.entries(loadedBanks)) {
+            const count = questions.length;
+            const label = document.createElement('label');
+            label.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; padding:4px 2px;';
+            label.innerHTML = `
+                <input type="checkbox" class="ipas-bank-checkbox" value="${name}" checked onchange="ipasUpdateSelectedCount()" style="margin:0;">
+                <span style="flex:1;">${name}</span>
+                <span style="color:#666; font-size:12px;">${count} 題</span>
+            `;
+            listEl.appendChild(label);
+        }
+    }
+
+    function ipasUpdateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.ipas-bank-checkbox:checked');
+        let total = 0;
+        checkboxes.forEach(cb => {
+            if (loadedBanks[cb.value]) total += loadedBanks[cb.value].length;
+        });
+        const el = document.getElementById('ipas-selected-count');
+        if (el) el.innerText = total;
+
+        // 更新科目顯示：若只選一個就顯示該名稱，多個則顯示「綜合」
+        const names = Array.from(checkboxes).map(cb => cb.value);
+        let subj = '考試科目';
+        if (names.length === 1) subj = names[0];
+        else if (names.length > 1) subj = '綜合（' + names.length + ' 個題庫）';
+        const subjEl = document.getElementById('ipas-notice-subject');
+        if (subjEl) subjEl.innerText = '[科目] ' + subj;
+        const sel = document.getElementById('ipas-subject-select');
+        if (sel) sel.innerHTML = `<option value="">[科目] ${subj}</option>`;
+    }
+
+    function ipasStartExam() {
+        // 依勾選的題庫組題
+        const checkboxes = document.querySelectorAll('.ipas-bank-checkbox:checked');
+        let pool = [];
+        checkboxes.forEach(cb => {
+            const name = cb.value;
+            if (loadedBanks[name]) {
+                pool = pool.concat(loadedBanks[name].map(q => ({...q, sourceBank: name})));
+            }
+        });
+        if (pool.length === 0) {
+            alert('請至少選擇一個題庫。');
+            return;
+        }
+
         // 預設抽 50 題（或全部）
         const count = Math.min(50, pool.length);
         ipasQuiz = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
@@ -2632,16 +2702,6 @@ color:white;
         ipasMarked = new Set();
         ipasIndex = 0;
 
-        const subj = Object.keys(loadedBanks)[0] || '考試科目';
-        document.getElementById('ipas-notice-subject').innerText = '[科目] ' + subj;
-        const sel = document.getElementById('ipas-subject-select');
-        if (sel) {
-            sel.innerHTML = `<option value="">[科目] ${subj}</option>`;
-        }
-        ipasShowStage('notice');
-    }
-
-    function ipasStartExam() {
         // 預設 75 分鐘（若題數不足 50 題則依比例微調，最少 15 分鐘）
         const minutes = ipasQuiz.length >= 50
             ? 75
