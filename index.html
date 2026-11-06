@@ -254,6 +254,97 @@
 		.ios-modal-btn:active {
 			background: #0062cc;
 		}
+
+		/* ========== 鑑定模擬（正式考試介面） ========== */
+		.ipas-stage { display: none; min-height: 60vh; }
+		.ipas-stage.active { display: block; }
+		.ipas-login-card, .ipas-notice-card, .ipas-result-card {
+			background: #f0f0f0; border: 1px solid #999; border-radius: 4px;
+			max-width: 420px; margin: 24px auto; padding: 24px 20px;
+			box-shadow: 2px 2px 8px rgba(0,0,0,0.15); font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+		}
+		.ipas-login-title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+		.ipas-login-ver { font-size: 12px; color: #666; text-align: center; margin-bottom: 20px; }
+		.ipas-label { display: block; font-size: 14px; margin-bottom: 6px; }
+		.ipas-input {
+			width: 100%; padding: 8px 10px; font-size: 15px; border: 1px solid #7a7a7a;
+			border-radius: 2px; margin-bottom: 16px; box-sizing: border-box;
+		}
+		.ipas-login-btns { display: flex; gap: 12px; justify-content: center; margin-bottom: 12px; }
+		.ipas-btn {
+			padding: 6px 20px; font-size: 14px; border: 1px solid #7a7a7a; border-radius: 3px;
+			background: #e8e8e8; cursor: pointer; min-width: 80px;
+		}
+		.ipas-btn:active { background: #d0d0d0; }
+		.ipas-btn-primary { background: #d4e4f7; border-color: #5a8ac0; }
+		.ipas-hint { font-size: 12px; color: #555; line-height: 1.5; text-align: center; margin-top: 8px; }
+		.ipas-notice-header {
+			display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px;
+			background: #e8eef5; padding: 8px 12px; border: 1px solid #a0b0c0; margin-bottom: 12px;
+		}
+		.ipas-notice-body {
+			background: #fff; border: 1px solid #ccc; padding: 14px; font-size: 13px;
+			line-height: 1.7; max-height: 280px; overflow-y: auto; margin-bottom: 16px;
+		}
+		.ipas-notice-footer { text-align: center; }
+		.ipas-exam-window {
+			background: #ece9d8; border: 1px solid #7a7a7a; border-radius: 3px;
+			overflow: hidden; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+			margin: -8px -8px 0; min-height: calc(100vh - 160px);
+		}
+		.ipas-topbar {
+			display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+			background: #d4d0c8; padding: 6px 8px; border-bottom: 1px solid #808080; font-size: 13px;
+		}
+		.ipas-subject { font-size: 12px; padding: 2px 4px; max-width: 140px; }
+		.ipas-top-id { font-weight: 600; }
+		.ipas-timer { color: #006600; font-weight: 700; margin-left: auto; }
+		.ipas-end-btn {
+			background: #c0d0e8; border: 1px solid #5a7a9a; padding: 4px 10px;
+			font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 2px;
+		}
+		.ipas-toolbar {
+			display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px;
+			background: #d4d0c8; border-bottom: 1px solid #a0a0a0;
+		}
+		.ipas-tool-btn {
+			padding: 4px 8px; font-size: 12px; border: 1px solid #7a7a7a;
+			background: #e8e4d8; border-radius: 2px; cursor: pointer; white-space: nowrap;
+		}
+		.ipas-tool-btn:active { background: #c8c4b8; }
+		.ipas-tool-btn.marked { background: #fff3cd; border-color: #c9a227; }
+		.ipas-body { display: flex; min-height: 360px; background: #fff; }
+		.ipas-question-area { flex: 1; padding: 16px; overflow-y: auto; line-height: 1.6; }
+		.ipas-q-num { font-weight: 700; margin-bottom: 10px; }
+		.ipas-opt {
+			display: flex; align-items: flex-start; gap: 8px; padding: 8px 6px;
+			margin-bottom: 4px; cursor: pointer; border-radius: 3px;
+		}
+		.ipas-opt:hover { background: #f5f5f0; }
+		.ipas-opt input { margin-top: 3px; flex-shrink: 0; }
+		.ipas-overview-panel {
+			width: 200px; border-left: 1px solid #ccc; background: #f8f8f4;
+			padding: 10px; overflow-y: auto; flex-shrink: 0;
+		}
+		.ipas-overview-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+		.ipas-overview-legend { font-size: 11px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 2px; }
+		.ipas-leg-g { color: #2e7d32; } .ipas-leg-y { color: #f9a825; } .ipas-leg-r { color: #c62828; }
+		.ipas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+		.ipas-grid-btn {
+			width: 100%; aspect-ratio: 1; font-size: 11px; font-weight: 600;
+			border: 1px solid #999; border-radius: 2px; cursor: pointer; padding: 0;
+		}
+		.ipas-grid-btn.answered { background: #81c784; color: #fff; border-color: #4caf50; }
+		.ipas-grid-btn.marked { background: #ffd54f; color: #333; border-color: #f9a825; }
+		.ipas-grid-btn.unanswered { background: #e57373; color: #fff; border-color: #c62828; }
+		.ipas-grid-btn.current { outline: 2px solid #1565c0; outline-offset: 1px; }
+		.ipas-result-title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 16px; }
+		.ipas-result-summary { font-size: 14px; line-height: 1.8; text-align: center; margin-bottom: 12px; }
+		@media (max-width: 480px) {
+			.ipas-overview-panel { width: 140px; }
+			.ipas-grid { grid-template-columns: repeat(4, 1fr); }
+			.ipas-exam-window { margin: -8px -4px 0; }
+		}
     </style>
 </head>
 <body>
@@ -545,6 +636,86 @@
 
 		</div>
 
+		<!-- Tab 5: 鑑定模擬（正式考試介面） -->
+		<div id="tab-content-ipas" class="tab-content">
+			<div id="ipas-stage-login" class="ipas-stage active">
+				<div class="ipas-login-card">
+					<div class="ipas-login-title">經濟部產業人才能力鑑定</div>
+					<div class="ipas-login-ver">Ver.模擬系統</div>
+					<label class="ipas-label">考生帳號（身分證字號）</label>
+					<input type="text" id="ipas-id-input" class="ipas-input" placeholder="請輸入身分證字號" maxlength="10" autocomplete="off">
+					<div class="ipas-login-btns">
+						<button class="ipas-btn ipas-btn-primary" onclick="ipasLogin()">登錄</button>
+						<button class="ipas-btn" onclick="document.getElementById('ipas-id-input').value=''">取消</button>
+					</div>
+					<div class="ipas-hint">請於考試帳號中輸入身分證字號，並點按登錄按鈕進入系統</div>
+				</div>
+			</div>
+
+			<div id="ipas-stage-notice" class="ipas-stage">
+				<div class="ipas-notice-card">
+					<div class="ipas-notice-header">
+						<span id="ipas-notice-subject">[科目] 考試科目</span>
+						<span id="ipas-notice-id">身分證統一編號 A243</span>
+						<span id="ipas-notice-name">姓名 A243</span>
+					</div>
+					<div class="ipas-notice-body" id="ipas-notice-text">
+						一、本試卷試題，為單科試卷，含單選題與複選題，共50題，共佔100%，每題2分（答錯不倒扣），總分共計100分，測驗時間75分鐘。<br><br>
+						二、本試題 0 為阿拉伯數字，O 為英文字母，作答時請先確認。<br><br>
+						三、單科試卷中滑鼠左右鍵位之選項，請以右手操作作答。<br><br>
+						四、有問題請舉手發問，切勿私下交談。
+					</div>
+					<div class="ipas-notice-footer">
+						<button class="ipas-btn ipas-btn-primary" onclick="ipasStartExam()">開始</button>
+					</div>
+					<div class="ipas-hint">登入完成後，請確認考試科目無誤，並請仔細閱讀注意事項。閱讀完成後請點按開始按鈕，即可進行本次考試。</div>
+				</div>
+			</div>
+
+			<div id="ipas-stage-exam" class="ipas-stage">
+				<div class="ipas-exam-window">
+					<div class="ipas-topbar">
+						<select id="ipas-subject-select" class="ipas-subject" disabled>
+							<option value="">[科目] 考試科目</option>
+						</select>
+						<span class="ipas-top-id" id="ipas-exam-id">A243 / A243</span>
+						<span class="ipas-timer" id="ipas-timer">90:00 / 90:00</span>
+						<button class="ipas-end-btn" onclick="ipasConfirmEnd()">結束測驗</button>
+					</div>
+					<div class="ipas-toolbar">
+						<button class="ipas-tool-btn" onclick="ipasPrev()">◀ 上一題</button>
+						<button class="ipas-tool-btn" onclick="ipasNext()">下一題 ▶</button>
+						<button class="ipas-tool-btn" onclick="ipasClearAnswer()">不作答</button>
+						<button class="ipas-tool-btn" id="ipas-mark-btn" onclick="ipasToggleMark()">試題標記</button>
+						<button class="ipas-tool-btn" onclick="ipasToggleOverview()">試題總覽</button>
+						<button class="ipas-tool-btn" onclick="ipasZoom(-1)">−</button>
+						<button class="ipas-tool-btn" onclick="ipasZoom(1)">+</button>
+					</div>
+					<div class="ipas-body">
+						<div class="ipas-question-area" id="ipas-question-area" style="font-size:15px;"></div>
+						<div class="ipas-overview-panel" id="ipas-overview-panel" style="display:none;">
+							<div class="ipas-overview-title">試題總覽</div>
+							<div class="ipas-overview-legend">
+								<span class="ipas-leg-g">綠：有作答</span>
+								<span class="ipas-leg-y">黃：有註記</span>
+								<span class="ipas-leg-r">紅：未作答</span>
+							</div>
+							<div class="ipas-grid" id="ipas-overview-grid"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="ipas-stage-result" class="ipas-stage">
+				<div class="ipas-result-card">
+					<div class="ipas-result-title">本次鑑定已結束</div>
+					<div id="ipas-result-summary" class="ipas-result-summary"></div>
+					<div class="ipas-hint">請攜帶您隨身的物品及證件，離開考試場地。</div>
+					<button class="ipas-btn ipas-btn-primary" style="margin-top:20px;" onclick="ipasReset()">返回系統</button>
+				</div>
+			</div>
+		</div>
+
         <!--<footer class="app-footer">
             <div class="footer-meta"><span>核心版本:20260609</span></div>
         </footer>-->
@@ -574,6 +745,10 @@
     </svg>
     <span class="tab-label">測驗分析</span>
 </div>
+		<div class="tab-item" id="tab-btn-ipas" onclick="switchGlobalTab('ipas')">
+			<svg class="tab-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+			<span class="tab-label">鑑定模擬</span>
+		</div>
     </nav>
 
     <!-- PDF 檢視器 (支援雙指縮放) -->
@@ -1148,6 +1323,8 @@ color:white;
         } else if (tabId === "wrong") {
             navTitle.innerText = "錯題本";
             renderWrongBook();
+        } else if (tabId === "ipas") {
+            navTitle.innerText = "鑑定模擬";
         } else { 
             navTitle.innerText = "模擬測驗"; 
             restoreQuizActionBar(); 
@@ -2412,6 +2589,247 @@ color:white;
             }
         } catch (e) {}
     });
+
+    // ========== 鑑定模擬（正式考試介面）核心邏輯 ==========
+    let ipasQuiz = [];
+    let ipasIndex = 0;
+    let ipasAnswers = {};      // index -> option key
+    let ipasMarked = new Set();
+    let ipasTimerInterval = null;
+    let ipasRemainSec = 0;
+    let ipasTotalSec = 0;
+    let ipasFontSize = 15;
+    let ipasCandidateId = 'A243';
+
+    function ipasShowStage(stage) {
+        document.querySelectorAll('#tab-content-ipas .ipas-stage').forEach(el => el.classList.remove('active'));
+        const el = document.getElementById('ipas-stage-' + stage);
+        if (el) el.classList.add('active');
+    }
+
+    function ipasLogin() {
+        const idInput = document.getElementById('ipas-id-input');
+        let id = (idInput && idInput.value) ? idInput.value.trim() : '';
+        if (!id) id = 'A243';
+        ipasCandidateId = id;
+        document.getElementById('ipas-notice-id').innerText = '身分證統一編號 ' + id;
+        document.getElementById('ipas-notice-name').innerText = '姓名 ' + id;
+        document.getElementById('ipas-exam-id').innerText = id + ' / ' + id;
+
+        // 使用已載入的題庫
+        let pool = [];
+        for (const [name, qs] of Object.entries(loadedBanks)) {
+            pool = pool.concat(qs.map(q => ({...q, sourceBank: name})));
+        }
+        if (pool.length === 0) {
+            alert('尚無題庫資料，請先至「模擬測驗」頁確認題庫已載入。');
+            return;
+        }
+        // 預設抽 50 題（或全部）
+        const count = Math.min(50, pool.length);
+        ipasQuiz = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+        ipasAnswers = {};
+        ipasMarked = new Set();
+        ipasIndex = 0;
+
+        const subj = Object.keys(loadedBanks)[0] || '考試科目';
+        document.getElementById('ipas-notice-subject').innerText = '[科目] ' + subj;
+        const sel = document.getElementById('ipas-subject-select');
+        if (sel) {
+            sel.innerHTML = `<option value="">[科目] ${subj}</option>`;
+        }
+        ipasShowStage('notice');
+    }
+
+    function ipasStartExam() {
+        // 預設 75 分鐘（若題數不足 50 題則依比例微調，最少 15 分鐘）
+        const minutes = ipasQuiz.length >= 50
+            ? 75
+            : Math.max(15, Math.ceil(ipasQuiz.length * 75 / 50));
+        ipasTotalSec = minutes * 60;
+        ipasRemainSec = ipasTotalSec;
+        ipasFontSize = 15;
+        ipasShowStage('exam');
+        ipasRenderQuestion();
+        ipasStartTimer();
+    }
+
+    function ipasStartTimer() {
+        if (ipasTimerInterval) clearInterval(ipasTimerInterval);
+        const timerEl = document.getElementById('ipas-timer');
+        function tick() {
+            if (ipasRemainSec <= 0) {
+                clearInterval(ipasTimerInterval);
+                ipasTimerInterval = null;
+                ipasFinish(true);
+                return;
+            }
+            const m = Math.floor(ipasRemainSec / 60).toString().padStart(2, '0');
+            const s = (ipasRemainSec % 60).toString().padStart(2, '0');
+            const tm = Math.floor(ipasTotalSec / 60).toString().padStart(2, '0');
+            const ts = (ipasTotalSec % 60).toString().padStart(2, '0');
+            if (timerEl) timerEl.innerText = `${m}:${s} / ${tm}:${ts}`;
+            ipasRemainSec--;
+        }
+        tick();
+        ipasTimerInterval = setInterval(tick, 1000);
+    }
+
+    function ipasRenderQuestion() {
+        const area = document.getElementById('ipas-question-area');
+        if (!area || !ipasQuiz.length) return;
+        const q = ipasQuiz[ipasIndex];
+        const ans = ipasAnswers[ipasIndex];
+        let optsHtml = '';
+        if (q.options && typeof q.options === 'object') {
+            for (const [key, val] of Object.entries(q.options)) {
+                const checked = (ans === key) ? 'checked' : '';
+                optsHtml += `<label class="ipas-opt"><input type="radio" name="ipas-opt" value="${key}" ${checked} onchange="ipasSelect('${key}')"><span>(${key}) ${val}</span></label>`;
+            }
+        }
+        area.style.fontSize = ipasFontSize + 'px';
+        area.innerHTML = `
+            <div class="ipas-q-num">${ipasIndex + 1}. ${q.question || ''}</div>
+            <div>${optsHtml}</div>
+        `;
+        const markBtn = document.getElementById('ipas-mark-btn');
+        if (markBtn) {
+            if (ipasMarked.has(ipasIndex)) {
+                markBtn.classList.add('marked');
+                markBtn.innerText = '取消標記';
+            } else {
+                markBtn.classList.remove('marked');
+                markBtn.innerText = '試題標記';
+            }
+        }
+        // 若總覽開啟則刷新
+        if (document.getElementById('ipas-overview-panel').style.display !== 'none') {
+            ipasRenderOverview();
+        }
+    }
+
+    function ipasSelect(key) {
+        ipasAnswers[ipasIndex] = key;
+        if (document.getElementById('ipas-overview-panel').style.display !== 'none') {
+            ipasRenderOverview();
+        }
+    }
+
+    function ipasClearAnswer() {
+        delete ipasAnswers[ipasIndex];
+        ipasRenderQuestion();
+    }
+
+    function ipasToggleMark() {
+        if (ipasMarked.has(ipasIndex)) ipasMarked.delete(ipasIndex);
+        else ipasMarked.add(ipasIndex);
+        ipasRenderQuestion();
+    }
+
+    function ipasPrev() {
+        if (ipasIndex > 0) {
+            ipasIndex--;
+            ipasRenderQuestion();
+        }
+    }
+
+    function ipasNext() {
+        if (ipasIndex < ipasQuiz.length - 1) {
+            ipasIndex++;
+            ipasRenderQuestion();
+        }
+    }
+
+    function ipasZoom(dir) {
+        ipasFontSize = Math.max(12, Math.min(24, ipasFontSize + dir * 2));
+        const area = document.getElementById('ipas-question-area');
+        if (area) area.style.fontSize = ipasFontSize + 'px';
+    }
+
+    function ipasToggleOverview() {
+        const panel = document.getElementById('ipas-overview-panel');
+        if (!panel) return;
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            ipasRenderOverview();
+        } else {
+            panel.style.display = 'none';
+        }
+    }
+
+    function ipasRenderOverview() {
+        const grid = document.getElementById('ipas-overview-grid');
+        if (!grid) return;
+        let html = '';
+        for (let i = 0; i < ipasQuiz.length; i++) {
+            let cls = 'unanswered';
+            if (ipasAnswers[i] !== undefined) cls = 'answered';
+            if (ipasMarked.has(i)) cls = 'marked';
+            if (i === ipasIndex) cls += ' current';
+            html += `<button type="button" class="ipas-grid-btn ${cls}" onclick="ipasJump(${i})">${i + 1}</button>`;
+        }
+        grid.innerHTML = html;
+    }
+
+    function ipasJump(i) {
+        if (i >= 0 && i < ipasQuiz.length) {
+            ipasIndex = i;
+            ipasRenderQuestion();
+        }
+    }
+
+    function ipasConfirmEnd() {
+        const answered = Object.keys(ipasAnswers).length;
+        const unanswered = ipasQuiz.length - answered;
+        const marked = ipasMarked.size;
+        if (!confirm(`以下是您的作答狀況，請確認後再結束測驗。\n\n學科總題數：${ipasQuiz.length}\n已作答題數：${answered}\n未作答題數：${unanswered}\n標記題數：${marked}\n\n確定要結束測驗嗎？`)) {
+            return;
+        }
+        ipasFinish(false);
+    }
+
+    function ipasFinish(timeout) {
+        if (ipasTimerInterval) {
+            clearInterval(ipasTimerInterval);
+            ipasTimerInterval = null;
+        }
+        let correct = 0;
+        ipasQuiz.forEach((q, i) => {
+            if (ipasAnswers[i] !== undefined && ipasAnswers[i] === q.answer) correct++;
+        });
+        const score = ipasQuiz.length ? Math.round((correct / ipasQuiz.length) * 100) : 0;
+        const answered = Object.keys(ipasAnswers).length;
+        const summary = document.getElementById('ipas-result-summary');
+        if (summary) {
+            summary.innerHTML = `
+                ${timeout ? '<div style="color:#c62828;margin-bottom:8px;">時間到，系統已自動交卷</div>' : ''}
+                學科總題數：${ipasQuiz.length}<br>
+                已作答題數：${answered}<br>
+                正確題數：${correct}<br>
+                得分：<b style="font-size:22px;color:#1565c0;">${score}</b> 分
+            `;
+        }
+        // 寫入歷史紀錄
+        try {
+            let history = JSON.parse(localStorage.getItem('quiz_history') || '[]');
+            history.unshift({
+                date: new Date().toLocaleString(),
+                count: ipasQuiz.length,
+                score: score,
+                passScore: passScore,
+                time: ipasTotalSec - Math.max(0, ipasRemainSec)
+            });
+            if (history.length > 500) history = history.slice(0, 500);
+            localStorage.setItem('quiz_history', JSON.stringify(history));
+        } catch (e) {}
+        ipasShowStage('result');
+    }
+
+    function ipasReset() {
+        ipasShowStage('login');
+        const idInput = document.getElementById('ipas-id-input');
+        if (idInput) idInput.value = '';
+    }
 
     window.onload = initSystem;
 	
