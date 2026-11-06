@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quiz-reader-cache-v1.3.0.43';
+const CACHE_NAME = 'quiz-reader-cache-v1.3.0.5';
 
 const ASSETS_TO_CACHE = [
   'index.html',
