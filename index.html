@@ -6,6 +6,7 @@
     <title>閱讀測驗系統</title>
     <link rel="manifest" href="manifest.json">
     <script src="./lib/pdf.min.js"></script>
+    <script src="https://unpkg.com/mqtt@5.10.3/dist/mqtt.min.js"></script>
     <style>
         /* iOS 官方系統色彩規範 */
         :root {
@@ -303,6 +304,10 @@
 				<div class="setting-row" style="padding-bottom: 8px;">
 					<div style="font-size: 14px; color: var(--text-secondary);">系統版本</div>
 					<div style="font-size: 14px; font-weight: 500;">v1.3.0</div>
+				</div>
+				<div class="setting-row" style="padding-bottom: 0;">
+					<div style="font-size: 14px; color: var(--text-secondary);">目前連線</div>
+					<div style="font-size: 14px; font-weight: 500;" id="online-count-display">載入：0</div>
 				</div>
             </div>
 			
@@ -1363,6 +1368,9 @@ color:white;
 			await loadAllBanks(bankFilesToLoad);
 
 		} catch (error) { console.error(error); }
+
+		// 啟動 MQTT 線上人數追蹤（失敗時靜默顯示 0）
+		try { connectMQTT(); } catch (e) {}
 	}
 
     async function loadAllBanks(bankFiles) {
@@ -2293,6 +2301,115 @@ color:white;
             }
         } catch(e) {}
     }
+
+    // ========== MQTT 目前連線人數（mqttgo.io）==========
+    // Topic 標籤：6792examupdate
+    // 使用 retained presence + Last Will 做加減，每 10 分鐘心跳更新
+    let mqttClient = null;
+    let onlineClients = new Set();
+    const myMqttClientId = 'exam_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now().toString(36);
+    const MQTT_TOPIC_BASE = '6792examupdate';
+    const MQTT_ONLINE_TOPIC = MQTT_TOPIC_BASE + '/online/' + myMqttClientId;
+    const MQTT_ONLINE_WILDCARD = MQTT_TOPIC_BASE + '/online/#';
+
+    function updateOnlineDisplay() {
+        const el = document.getElementById('online-count-display');
+        if (el) {
+            el.innerText = '載入：' + onlineClients.size;
+        }
+    }
+
+    function connectMQTT() {
+        try {
+            if (typeof mqtt === 'undefined') {
+                onlineClients.clear();
+                updateOnlineDisplay();
+                return;
+            }
+
+            mqttClient = mqtt.connect('ws://mqttgo.io:8000/mqtt', {
+                clientId: myMqttClientId,
+                clean: true,
+                keepalive: 60,
+                reconnectPeriod: 15000,
+                connectTimeout: 8000,
+                will: {
+                    topic: MQTT_ONLINE_TOPIC,
+                    payload: '',
+                    retain: true,
+                    qos: 0
+                }
+            });
+
+            mqttClient.on('connect', function () {
+                try {
+                    mqttClient.subscribe(MQTT_ONLINE_WILDCARD, { qos: 0 });
+                    // 宣告自己上線（retain，讓其他人看到）
+                    mqttClient.publish(MQTT_ONLINE_TOPIC, String(Date.now()), { retain: true, qos: 0 });
+                } catch (e) {}
+            });
+
+            mqttClient.on('message', function (topic, message) {
+                try {
+                    if (topic.indexOf(MQTT_TOPIC_BASE + '/online/') === 0) {
+                        const parts = topic.split('/');
+                        const clientPart = parts[parts.length - 1];
+                        const payload = (message && message.toString) ? message.toString() : '';
+                        if (!payload || payload === '0') {
+                            onlineClients.delete(clientPart);
+                        } else {
+                            // 可選：過濾過舊的 heartbeat（超過 25 分鐘視為離線）
+                            const ts = parseInt(payload, 10);
+                            if (!isNaN(ts) && (Date.now() - ts > 25 * 60 * 1000)) {
+                                onlineClients.delete(clientPart);
+                            } else {
+                                onlineClients.add(clientPart);
+                            }
+                        }
+                        updateOnlineDisplay();
+                    }
+                } catch (e) {}
+            });
+
+            mqttClient.on('error', function () {
+                // 連線失敗不報錯，顯示 0
+                onlineClients.clear();
+                updateOnlineDisplay();
+            });
+
+            mqttClient.on('close', function () {
+                // 保持現有計數，等重連
+            });
+
+            mqttClient.on('offline', function () {
+                // 靜默
+            });
+
+        } catch (e) {
+            onlineClients.clear();
+            updateOnlineDisplay();
+        }
+    }
+
+    // 每 10 分鐘更新一次 presence（心跳），讓其他人知道仍在線
+    setInterval(function () {
+        try {
+            if (mqttClient && mqttClient.connected) {
+                mqttClient.publish(MQTT_ONLINE_TOPIC, String(Date.now()), { retain: true, qos: 0 });
+            }
+        } catch (e) {}
+    }, 10 * 60 * 1000);
+
+    // 關閉頁面時主動清除自己的 presence（Last Will 會在異常斷線時處理）
+    window.addEventListener('beforeunload', function () {
+        try {
+            if (mqttClient && mqttClient.connected) {
+                mqttClient.publish(MQTT_ONLINE_TOPIC, '', { retain: true, qos: 0 });
+                mqttClient.end(true);
+            }
+        } catch (e) {}
+    });
+
     window.onload = initSystem;
 	
 	
